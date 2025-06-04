@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\API\Auth;
 
-use App\Helpers\Helper;
-use App\Http\Controllers\Controller;
-use App\Traits\ResponseTrait;
 use Exception;
+use App\Helpers\Helper;
+use App\Traits\ApiResponse;
+use App\Traits\ResponseTrait;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 
 class LogoutController extends Controller
 {
-    use ResponseTrait;
+    use ApiResponse;
     public function logout(): \Illuminate\Http\JsonResponse
     {
         try {
@@ -22,12 +23,12 @@ class LogoutController extends Controller
                 // For API token-based auth (recommended for mobile/SPAs)
                 auth()->user()->currentAccessToken()->delete();
 
-                return $this->sendResponse('User logged out successfully');
+                return $this->success('User logged out successfully');
             }
 
-            return $this->sendError('User not authenticated', 401);
+            return $this->error('User not authenticated');
         } catch (Exception $e) {
-            return $this->sendError($e->getMessage(), 500);
+            return $this->error($e->getMessage(), 500);
         }
     }
 }
