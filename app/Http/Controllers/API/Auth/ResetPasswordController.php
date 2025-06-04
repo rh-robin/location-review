@@ -41,6 +41,8 @@ class ResetPasswordController extends Controller
                 'otp_expires_at' => Carbon::now()->addMinutes(60),
             ]);
 
+            $user->makeHidden('otp');
+
             return $this->success(
                 data: $user,
                 message: 'OTP sent successfully.'
@@ -58,7 +60,7 @@ class ResetPasswordController extends Controller
     {
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'otp' => 'required|digits:6',
+            'otp' => 'required|digits:4',
         ]);
 
         try {
