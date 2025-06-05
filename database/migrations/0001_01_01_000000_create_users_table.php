@@ -28,6 +28,9 @@ return new class extends Migration
             $table->string('delete_token')->nullable();
             $table->timestamp('delete_token_expires_at')->nullable();
 
+            //avatar
+            $table->string('avatar')->nullable();
+
             //is verified
             $table->boolean('is_verified')->default(false);
             $table->rememberToken();

@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\LocationResource\Pages;
-use App\Filament\Resources\LocationResource\RelationManagers;
-use App\Models\Location;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Location;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\LocationResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\LocationResource\RelationManagers;
 
 class LocationResource extends Resource
 {
@@ -31,7 +31,15 @@ class LocationResource extends Resource
     {
         return $table
             ->columns([
-                //
+                  Tables\Columns\TextColumn::make('longitude')
+                    ->sortable()
+                    ->searchable(),
+                      Tables\Columns\TextColumn::make('latitude')
+                    ->sortable()
+                    ->searchable(),
+                      Tables\Columns\TextColumn::make('user.name')
+                    ->sortable()
+                    ->searchable()->label('User Name'),
             ])
             ->filters([
                 //

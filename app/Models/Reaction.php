@@ -7,5 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Reaction extends Model
 {
     protected $guarded = [];
-    
+      public function review()
+    {
+        return $this->belongsTo(Review::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

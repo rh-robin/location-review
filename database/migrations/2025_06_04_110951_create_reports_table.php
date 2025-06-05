@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('review_id');
             $table->unsignedBigInteger('user_id');
             $table->text('reason');
             $table->text('description');
             $table->string('image')->nullable();
             $table->enum('status', ['pending', 'resolved', 'rejected'])->default('pending');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('review_id')->references('id')->on('reviews')->onDelete('cascade');
             $table->timestamps();
         });
     }

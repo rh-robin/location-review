@@ -12,4 +12,23 @@ class Review extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ReviewImage::class);
+    }
+
+    public function reactions()
+    {
+        return $this->hasMany(Reaction::class);
+    }
+    public function replies(){
+        return $this->hasMany(Reply::class);
+    }
+
 }

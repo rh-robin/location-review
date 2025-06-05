@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('type', ['like', 'dislike'])->nullable();
             $table->foreign('review_id')->references('id')->on('reviews')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unique(['review_id', 'user_id']);
             $table->timestamps();
         });
     }
