@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ReplyController;
@@ -33,5 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //replay
     Route::get('/reviews/{reviewId}/replies', [ReplyController::class, 'index']);
     Route::post('/replies', [ReplyController::class, 'store']);
-    
+
+
+    //profile
+    Route::get('/profile/personal-info', [ProfileController::class, 'getPersonalInfo']);
+    Route::post('/profile/personal-info/update', [ProfileController::class, 'updatePersonalInfo']);
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
+
 });
