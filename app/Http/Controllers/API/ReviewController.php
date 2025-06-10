@@ -14,99 +14,74 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ReviewController extends Controller
 {
     use ApiResponse;
 
-    public function store(Request $request)
+    public function storeReview(Request $request)
     {
         $validated = $request->validate([
-            'location_id' => 'required_without:latitude,longitude|exists:locations,id',
-            'current_location' => 'required_without:location_id|string|max:255',
-            'latitude' => 'required_without:location_id|numeric',
-            'longitude' => 'required_without:location_id|numeric',
+            'location_name' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
             'rating' => 'required|integer|in:1,2,3,4,5',
             'comment' => 'required|string|max:2000',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
         ]);
 
         try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
             DB::beginTransaction();
-            // Handle location
-            if (!isset($validated['location_id'])) {
-                $latitude = round($validated['latitude'], 6);
-                $longitude = round($validated['longitude'], 6);
 
-                // Check if coordinates exist
-                $location = Location::where('latitude', $latitude)
-                    ->where('longitude', $longitude)
-                    ->first();
+            // 1. Find or create location
+            $location = Location::where('latitude', $validated['latitude'])
+                ->where('longitude', $validated['longitude'])
+                ->first();
 
-                if (!$location) {
-                    // Create new location if it doesn't exist
-                    $location = Location::create([
-                        'user_id' => Auth::id(),
-                        'current_location' => $validated['current_location'],
-                        'latitude' => $latitude,
-                        'longitude' => $longitude,
-                        'status' => 'active'
-                    ]);
-                }
-                $validated['location_id'] = $location->id;
+            if (!$location) {
+                $location = Location::create([
+                    'name' => $validated['location_name'],
+                    'latitude' => $validated['latitude'],
+                    'longitude' => $validated['longitude'],
+                    'status' => 'active',
+                ]);
             }
 
-            // Rest of your store method (review creation, image handling, etc.)
-            $review = Review::firstOrNew(
-                [
-                    'location_id' => $validated['location_id'],
-                    'user_id' => Auth::id()
-                ],
-                [
-                    'rating' => intval($validated['rating']),
-                    'comment' => $validated['comment']
-                ]
-            );
+            // 2. Create the review
+            $review = Review::create([
+                'location_id' => $location->id,
+                'user_id' => auth()->id(),
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'],
+            ]);
 
-            $isUpdate = $review->exists;
-            $review->fill([
-                'rating' => intval($validated['rating']),
-                'comment' => $validated['comment']
-            ])->save();
-
+            // 3. Handle review images (if any)
             if ($request->hasFile('images')) {
-                if ($isUpdate) {
-                    ReviewImage::where('review_id', $review->id)->delete();
-                }
                 foreach ($request->file('images') as $image) {
-                    $path = Helper::fileUpload($image, 'reviews', $image->getClientOriginalName());
+                    $randomString = Str::random(10);
+                    $uploadedPath = Helper::fileUpload($image, 'review_images', $randomString);
+
                     ReviewImage::create([
                         'review_id' => $review->id,
-                        'image' => asset($path),
+                        'image' => $uploadedPath,
                     ]);
                 }
             }
 
             DB::commit();
 
-            return $this->success(
-                data: $review->load(['images', 'location']),
-                message: $isUpdate ? 'Review updated successfully' : 'Review created successfully'
-            );
-        } catch (\Illuminate\Database\QueryException $e) {
+            return $this->success(null, 'Review submitted successfully.');
+
+        } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Review store error: ' . $e->getMessage());
-            return $this->error(
-                message: 'Failed to process review due to a database error',
-                status: 500
-            );
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Review store error: ' . $e->getMessage());
-            return $this->error(
-                message: 'An unexpected error occurred',
-                status: 500
-            );
+            return $this->error('Failed to submit review.', 500, ['error' => $e->getMessage()]);
         }
     }
 

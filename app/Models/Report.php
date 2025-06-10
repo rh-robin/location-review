@@ -6,8 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Report extends Model
 {
-    protected $guarded = [];
+    protected $table = 'reports';
 
+    protected $fillable = [
+        'review_id', 'user_id', 'reason', 'description', 'image', 'status'
+    ];
 
     public function review()
     {

@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reaction extends Model
 {
-    protected $guarded = [];
-      public function review()
+    protected $table = 'reactions';
+
+    protected $fillable = [
+        'review_id', 'user_id', 'type'
+    ];
+
+    public function review()
     {
         return $this->belongsTo(Review::class);
     }
@@ -16,5 +21,4 @@ class Reaction extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 }

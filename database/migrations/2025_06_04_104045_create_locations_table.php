@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->string('current_location')->nullable();
+            $table->string('name')->nullable();
             $table->float('latitude');
             $table->float('longitude');
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

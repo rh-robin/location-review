@@ -23,7 +23,7 @@ Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
 Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     //store location data
-    Route::post('/store-review', [ReviewController::class, 'store']);
+    Route::post('/store-review', [ReviewController::class, 'storeReview']);
     Route::post('/store-report', [ReportController::class, 'store']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
 
