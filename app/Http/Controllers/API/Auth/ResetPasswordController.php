@@ -95,7 +95,6 @@ class ResetPasswordController extends Controller
             return $this->success(
                 data: $user,
                 message: 'OTP verified successfully.'
-
             );
 
         } catch (Exception $e) {

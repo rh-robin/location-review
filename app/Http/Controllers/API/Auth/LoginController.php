@@ -31,7 +31,7 @@ class LoginController extends Controller
             }
             // Check the password
             if (!Hash::check($request->password, $user->password)) {
-                return $this->error('Invalid credentials. Please check your email and password.');
+                return $this->error('Invalid credentials. Please try again.');
             }
 
             // Check if the email is verified before login is successful

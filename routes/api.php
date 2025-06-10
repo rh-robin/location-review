@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ReplyController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\ReviewController;
-use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\ReactionCoontroller;
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\RegisterController;
@@ -24,7 +23,6 @@ Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
 Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     //store location data
-    Route::post('/store-location', [LocationController::class, 'StoreLocation']);
     Route::post('/store-review', [ReviewController::class, 'store']);
     Route::post('/store-report', [ReportController::class, 'store']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
@@ -42,4 +40,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/personal-info', [ProfileController::class, 'getPersonalInfo']);
     Route::post('/profile/personal-info/update', [ProfileController::class, 'updatePersonalInfo']);
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
+
 });
