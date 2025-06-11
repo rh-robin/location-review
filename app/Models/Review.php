@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    protected $guarded = [];
+    protected $table = 'reviews';
+
+    protected $fillable = [
+        'location_id', 'user_id', 'rating', 'comment'
+    ];
 
     public function location()
     {
@@ -27,8 +31,14 @@ class Review extends Model
     {
         return $this->hasMany(Reaction::class);
     }
-    public function replies(){
+
+    public function replies()
+    {
         return $this->hasMany(Reply::class);
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

@@ -19,23 +19,41 @@ class ReactionCoontroller extends Controller
             'type' => 'required|in:like,dislike',
         ]);
 
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // Find existing reaction or create new one
-        $reaction = Reaction::updateOrCreate(
-            [
-                'review_id' => $validated['review_id'],
-                'user_id' => $user->id,
-            ],
-            [
-                'type' => $validated['type'] === 'dislike' ? 'dislike' : 'like',
-            ]
-        );
+            if (!$user) {
+                return $this->unauthorized('User not authenticated.');
+            }
 
-        return $this->success(
-            message: 'Reaction saved successfully',
-            data: ['reaction' => $reaction]
-        );
+            $reaction = Reaction::where('review_id', $validated['review_id'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($reaction) {
+                // If the existing reaction type matches the incoming type, unset it
+                if ($reaction->type === $validated['type']) {
+                    $reaction->type = null;
+                } else {
+                    // Otherwise, update the type
+                    $reaction->type = $validated['type'];
+                }
+                $reaction->save();
+            } else {
+                // Create new reaction
+                $reaction = Reaction::create([
+                    'review_id' => $validated['review_id'],
+                    'user_id' => $user->id,
+                    'type' => $validated['type'],
+                ]);
+            }
+
+            return $this->success($reaction, 'Reaction updated successfully.');
+
+        } catch (\Exception $e) {
+            \Log::error('Reaction store error: ' . $e->getMessage());
+            return $this->error('Failed to update reaction.', 500, ['error' => $e->getMessage()]);
+        }
     }
 
     // Get reaction counts for a review

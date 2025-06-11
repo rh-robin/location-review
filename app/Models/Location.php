@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    protected $guarded = [];
+    protected $table = 'locations';
+    protected $fillable = [
+        'name', 'latitude', 'longitude', 'status'
+    ];
 
-    public function user()
+    public function reviews()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(Review::class);
     }
-
 }

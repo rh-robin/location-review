@@ -25,10 +25,10 @@ class Helper
         if (!file_exists($path)) mkdir($path, 0755, true);
 
         // Move the file to the directory
-        $file->move($path, $originalName);
+        $file->move($path, $name.$originalName);
 
         // Return the path of the uploaded file
-        return 'uploads/' . $folder . '/' . $originalName;
+        return 'uploads/' . $folder . '/' . $name.$originalName;
     }
 
 
