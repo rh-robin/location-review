@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\Review;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\ResponseTrait;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -26,6 +30,7 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'location' => $user->location,
+                'avatar' => asset($user->avatar),
             ];
 
             return $this->success($profile, 'User profile retrieved successfully.');
@@ -73,6 +78,43 @@ class ProfileController extends Controller
     }
 
 
+    public function changeAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
+
+            // Delete old avatar if exists
+            if ($user->avatar && file_exists(public_path($user->avatar))) {
+                Helper::fileDelete(public_path($user->avatar));
+            }
+
+            // Upload new avatar using the same helper
+            $randomString = Str::random(10);
+            $uploadedPath = Helper::fileUpload($request->file('avatar'), 'avatars', $randomString);
+
+            // Save to DB
+            $user->avatar = $uploadedPath;
+            $user->save();
+
+            return $this->success([
+                'message' => 'Avatar updated successfully',
+                'avatar_url' => asset($user->avatar),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Avatar Update Error: ' . $e->getMessage());
+            return $this->error('Something went wrong while updating avatar', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+
+
     public function changePassword(Request $request)
     {
         try {
@@ -104,6 +146,75 @@ class ProfileController extends Controller
             return $this->error('Something went wrong while changing password', 500, ['error' => $e->getMessage()]);
         }
     }
+
+
+
+    public function getMyReviews(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
+
+            // Fetch all reviews of the authenticated user with location, images, and like count
+            $reviews = Review::with(['location', 'images'])
+                ->withCount([
+                    'reactions as like_count' => function ($query) {
+                        $query->where('type', 'like');
+                    }
+                ])
+                ->where('user_id', $user->id)
+                ->latest()
+                ->get();
+
+            // Transform each review
+            $transformedReviews = $reviews->map(function ($review) {
+                $reviewData = [
+                    'review_id' => $review->id,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'like_count' => $review->like_count,
+                    'created_at' => \Carbon\Carbon::parse($review->created_at)->format('F j, Y'),
+                    'updated_at' => \Carbon\Carbon::parse($review->updated_at)->format('F j, Y'),
+                ];
+
+                // Review Images
+                $images = $review->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image_url' => asset($image->image),
+                        'created_at' => \Carbon\Carbon::parse($image->created_at)->format('F j, Y'),
+                    ];
+                });
+
+                // Location Info
+                $location = $review->location;
+                $locationData = $location ? [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
+                ] : null;
+
+                return [
+                    'location' => $locationData,
+                    'review' => $reviewData,
+                    'images' => $images,
+                ];
+            });
+
+            return $this->success([
+                'reviews' => $transformedReviews
+            ], 'User reviews fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Get My Reviews Error: ' . $e->getMessage());
+            return $this->error('Failed to fetch user reviews', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+
 
 
 
