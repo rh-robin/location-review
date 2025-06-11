@@ -40,5 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/personal-info', [ProfileController::class, 'getPersonalInfo']);
     Route::post('/profile/personal-info/update', [ProfileController::class, 'updatePersonalInfo']);
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
+    Route::post('/profile/change-avatar', [ProfileController::class, 'changeAvatar']);
+    Route::get('/profile/my-reviews', [ProfileController::class, 'getMyReviews']);
 
 });
