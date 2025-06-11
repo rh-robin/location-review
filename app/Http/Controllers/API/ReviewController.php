@@ -37,6 +37,7 @@ class ReviewController extends Controller
             if (!$user) {
                 return $this->unauthorized('User not authenticated');
             }
+
             DB::beginTransaction();
 
             // 1. Find or create location
@@ -53,13 +54,29 @@ class ReviewController extends Controller
                 ]);
             }
 
-            // 2. Create the review
-            $review = Review::create([
-                'location_id' => $location->id,
-                'user_id' => auth()->id(),
-                'rating' => $validated['rating'],
-                'comment' => $validated['comment'],
-            ]);
+            // 2. Find existing review by the user for this location
+            $review = Review::where('location_id', $location->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($review) {
+                // Update existing review
+                $review->update([
+                    'rating' => $validated['rating'],
+                    'comment' => $validated['comment'],
+                ]);
+
+                // Delete old images
+                ReviewImage::where('review_id', $review->id)->delete();
+            } else {
+                // Create new review
+                $review = Review::create([
+                    'location_id' => $location->id,
+                    'user_id' => $user->id,
+                    'rating' => $validated['rating'],
+                    'comment' => $validated['comment'],
+                ]);
+            }
 
             // 3. Handle review images (if any)
             if ($request->hasFile('images')) {
@@ -76,7 +93,9 @@ class ReviewController extends Controller
 
             DB::commit();
 
-            return $this->success(null, 'Review submitted successfully.');
+            return $this->success(null, $review->wasRecentlyCreated
+                ? 'Review submitted successfully.'
+                : 'Review updated successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -85,20 +104,210 @@ class ReviewController extends Controller
         }
     }
 
+
     //review fetch
-    public function fetchReview($lat, $lng)
+    /*public function fetchReview(Request $request)
     {
-        $reviews = Review::with('location', 'user', 'images', 'replies')->latest()->get();
-        //total reaction spasic review
-        $reviews->map(function ($review) {
-            $review->total_reactions = $review->reactions()->count();
-            $review->total_likes = $review->reactions()->where('type', 'like')->count();
-            $review->total_dislikes = $review->reactions()->where('type', 'dislike')->count();
-        });
-        //ratting  int formate
-        $reviews->map(function ($review) {
-            $review->rating = (int) $review->rating;
-        });
-        return $this->success(data: $reviews, message: 'Reviews fetched successfully');
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        try {
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
+
+            $location = Location::where('latitude', $latitude)
+                ->where('longitude', $longitude)
+                ->first();
+
+            if (!$location) {
+                return $this->notFound('Location not found');
+            }
+
+            $reviews = Review::with(['user:id,name', 'images'])
+                ->where('location_id', $location->id)
+                ->latest()
+                ->get();
+
+            $averageRating = $reviews->avg('rating');
+
+            return $this->success([
+                'location' => [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
+                ],
+                'average_rating' => round($averageRating, 2),
+                'reviews' => $reviews,
+            ], 'Reviews fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Fetch Review Error: ' . $e->getMessage());
+            return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
+        }
+    }*/
+
+
+    /*public function fetchReview(Request $request)
+    {
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
+
+            $location = Location::where('latitude', $latitude)
+                ->where('longitude', $longitude)
+                ->first();
+
+            if (!$location) {
+                return $this->notFound('Location not found');
+            }
+
+            // Fetch reviews with user, images, like count, and the authenticated user's reaction
+            $reviews = Review::with(['user:id,name', 'images'])
+                ->withCount([
+                    'reactions as like_count' => function ($query) {
+                        $query->where('type', 'like');
+                    }
+                ])
+                ->with(['reactions' => function ($query) use ($user) {
+                    $query->where('user_id', optional($user)->id);
+                }])
+                ->where('location_id', $location->id)
+                ->latest()
+                ->get();
+
+            // Append 'user_reacted' key to each review
+            $reviews->transform(function ($review) {
+                $review->created_at = $review->created_at->format('F j, Y');
+                $review->updated_at = $review->updated_at->format('F j, Y');
+                $review->images = $review->images->map(function ($image) {
+                    $image->image = asset($image->image);
+                    return $image;
+                });
+                $review->user_reacted = optional($review->reactions->first())->type ?? null;
+                unset($review->reactions); // remove the reactions array (optional)
+                return $review;
+            });
+
+            $averageRating = $reviews->avg('rating');
+
+            return $this->success([
+                'location' => [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
+                ],
+                'average_rating' => round($averageRating, 2),
+                'reviews' => $reviews->toArray(),
+            ], 'Reviews fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Fetch Review Error: ' . $e->getMessage());
+            return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
+        }
+    }*/
+
+
+    public function fetchReview(Request $request)
+    {
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
+
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
+
+            $location = Location::where('latitude', $latitude)
+                ->where('longitude', $longitude)
+                ->first();
+
+            if (!$location) {
+                return $this->notFound('Location not found');
+            }
+
+            // Fetch reviews with user, images, like count, and the authenticated user's reaction
+            $reviews = Review::with(['user:id,name,avatar', 'images'])
+                ->withCount([
+                    'reactions as like_count' => function ($query) {
+                        $query->where('type', 'like');
+                    }
+                ])
+                ->with(['reactions' => function ($query) use ($user) {
+                    $query->where('user_id', optional($user)->id);
+                }])
+                ->where('location_id', $location->id)
+                ->latest()
+                ->get();
+
+            // Transform each review
+            $reviews = $reviews->map(function ($review) {
+                $reviewData = $review->toArray();
+
+                // Format dates
+                $reviewData['created_at'] = \Carbon\Carbon::parse($review->created_at)->format('F j, Y');
+                $reviewData['updated_at'] = \Carbon\Carbon::parse($review->updated_at)->format('F j, Y');
+
+                // Format image URLs
+                $reviewData['images'] = $review->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'review_id' => $image->review_id,
+                        'image' => asset($image->image),
+                        'created_at' => \Carbon\Carbon::parse($image->created_at)->format('F j, Y'),
+                        'updated_at' => \Carbon\Carbon::parse($image->updated_at)->format('F j, Y'),
+                    ];
+                });
+
+                // User avatar URL
+                if (!empty($review->user)) {
+                    $reviewData['user']['avatar'] = $review->user->avatar ? asset($review->user->avatar) : null;
+                }
+
+                // Add user reaction
+                $reviewData['user_reacted'] = optional($review->reactions->first())->type ?? null;
+
+                // Remove reactions (optional)
+                unset($reviewData['reactions']);
+
+                return $reviewData;
+            });
+
+            $averageRating = $reviews->avg('rating');
+
+            return $this->success([
+                'location' => [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
+                ],
+                'average_rating' => round($averageRating, 2),
+                'reviews' => $reviews,
+            ], 'Reviews fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Fetch Review Error: ' . $e->getMessage());
+            return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
+        }
     }
+
 }

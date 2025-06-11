@@ -104,4 +104,8 @@ class ProfileController extends Controller
             return $this->error('Something went wrong while changing password', 500, ['error' => $e->getMessage()]);
         }
     }
+
+
+
+
 }
