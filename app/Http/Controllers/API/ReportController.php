@@ -46,7 +46,7 @@ class ReportController extends Controller
 
         return $this->success(
             data: $report,
-            message: 'Report created successfully'
+            message: 'Report submitted successfully'
         );
     }
 }
