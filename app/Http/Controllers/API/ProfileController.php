@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\Reply;
 use App\Models\Review;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -149,7 +150,7 @@ class ProfileController extends Controller
 
 
 
-    public function getMyReviews(Request $request)
+    public function getMyReviews()
     {
         try {
             $user = auth()->user();
@@ -215,6 +216,65 @@ class ProfileController extends Controller
     }
 
 
+    public function getMyReplies(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated');
+            }
+
+            // Fetch replies with related review and location
+            $replies = Reply::with([
+                'review' => function ($query) {
+                    $query->select('id', 'location_id', 'user_id', 'rating', 'comment', 'created_at')
+                        ->with('location:id,name,latitude,longitude');
+                }
+            ])
+                ->where('user_id', $user->id)
+                ->latest()
+                ->get();
+
+            // Transform each reply
+            $transformedReplies = $replies->map(function ($reply) use ($user) {
+                $review = $reply->review;
+                $location = $review?->location;
+
+                return [
+                    'reply_id' => $reply->id,
+                    'review_id' => $reply->review_id,
+                    'content' => $reply->content,
+                    'created_at' => $reply->created_at->format('F j, Y'),
+                    'updated_at' => $reply->updated_at->format('F j, Y'),
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'avatar' => $user->avatar ? asset($user->avatar) : null,
+                    ],
+                    'review' => $review ? [
+                        'id' => $review->id,
+                        'comment' => $review->comment,
+                        'rating' => $review->rating,
+                        'created_at' => $review->created_at->format('F j, Y'),
+                    ] : null,
+                    'location' => $location ? [
+                        'id' => $location->id,
+                        'name' => $location->name,
+                        'latitude' => $location->latitude,
+                        'longitude' => $location->longitude,
+                    ] : null,
+                ];
+            });
+
+            return $this->success([
+                'replies' => $transformedReplies
+            ], 'Replies fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Get My Replies Error: ' . $e->getMessage());
+            return $this->error('Failed to fetch replies', 500, ['error' => $e->getMessage()]);
+        }
+    }
 
 
 

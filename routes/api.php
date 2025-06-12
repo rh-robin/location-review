@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //replay
     Route::get('/reviews/{reviewId}/replies', [ReplyController::class, 'index']);
-    Route::post('/replies', [ReplyController::class, 'store']);
+    Route::post('/reply', [ReplyController::class, 'store']);
 
 
     //profile
@@ -42,5 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     Route::post('/profile/change-avatar', [ProfileController::class, 'changeAvatar']);
     Route::get('/profile/my-reviews', [ProfileController::class, 'getMyReviews']);
+    Route::get('/profile/my-replies', [ProfileController::class, 'getMyReplies']);
 
 });
