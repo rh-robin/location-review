@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword
 Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
 Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('logout', [LogoutController::class, 'logout']);
     //store location data
     Route::post('/store-review', [ReviewController::class, 'storeReview']);
     Route::post('/store-report', [ReportController::class, 'store']);

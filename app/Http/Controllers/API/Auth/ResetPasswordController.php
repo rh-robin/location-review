@@ -45,12 +45,12 @@ class ResetPasswordController extends Controller
 
             return $this->success(
                 data: $user,
-                message: 'OTP sent successfully.'
+                message: "OTP sent successfully: $otp"
             );
 
         } catch (Exception $e) {
             return $this->error(
-                'Something went wrong',
+                'Something went wrong :'.$e->getMessage(),
                 500
             );
         }
