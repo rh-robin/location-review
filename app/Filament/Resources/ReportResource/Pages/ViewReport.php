@@ -6,7 +6,8 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\ReportResource;
 
-class ListReports extends ListRecords
+
+class ViewReport extends ViewReport
 {
     protected static string $resource = ReportResource::class;
 }

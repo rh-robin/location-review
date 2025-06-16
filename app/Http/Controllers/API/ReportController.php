@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Report;
 use App\Helpers\Helper;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -27,8 +28,8 @@ class ReportController extends Controller
         // Handle single image upload
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $path = Helper::fileUpload($file, 'reports', $file->getClientOriginalName());
-            $imagePath = asset($path);
+            $fileName = Str::random(10);
+            $imagePath = Helper::fileUpload($file, 'reports', $fileName);
         }
 
         // Create or update report
@@ -40,7 +41,7 @@ class ReportController extends Controller
             [
                 'reason' => $validated['reason'],
                 'description' => $validated['description'],
-                'image' => $imagePath,
+                'image' => asset($imagePath),
             ]
         );
 
