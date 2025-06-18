@@ -3,11 +3,18 @@
 namespace App\Filament\Resources\ReportResource\Pages;
 
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\ReportResource;
 
-
-class ViewReport extends ViewReport
+class ViewReport extends ViewRecord
 {
     protected static string $resource = ReportResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\DeleteAction::make(),
+        ];
+    }
 }
