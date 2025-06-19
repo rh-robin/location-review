@@ -31,6 +31,8 @@ return new class extends Migration
 
             //avatar
             $table->string('avatar')->nullable();
+            //user type
+            $table->enum('user_type', ['admin', 'user'])->default('user');
 
             //is verified
             $table->boolean('is_verified')->default(false);
