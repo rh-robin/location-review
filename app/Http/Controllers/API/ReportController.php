@@ -41,7 +41,7 @@ class ReportController extends Controller
             [
                 'reason' => $validated['reason'],
                 'description' => $validated['description'],
-                'image' => asset($imagePath),
+                'image' => $imagePath,
             ]
         );
 

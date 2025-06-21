@@ -2,11 +2,8 @@
 
 namespace App\Helpers;
 
-use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 
 class Helper
@@ -14,24 +11,11 @@ class Helper
     //! File or Image Upload
     public static function fileUpload($file, string $folder, string $name): ?string
     {
-        // Ensure that file exists in the request
         if (!$file || !$file->isValid()) return null;
-
-        // Get the original file name
         $originalName = $file->getClientOriginalName();
-        $path = public_path('uploads/' . $folder);
-
-        // Create directory if it doesn't exist
-        if (!file_exists($path)) mkdir($path, 0755, true);
-
-        // Move the file to the directory
-        $file->move($path, $name.$originalName);
-
-        // Return the path of the uploaded file
-        return 'uploads/' . $folder . '/' . $name.$originalName;
+        $path = $file->storeAs($folder, $name . $originalName, ['disk' => 'public']);
+        return $path;
     }
-
-
 
     //! File or Image Delete
     public static function fileDelete(string $path): void

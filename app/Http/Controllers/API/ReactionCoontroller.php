@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Reaction;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -51,7 +52,7 @@ class ReactionCoontroller extends Controller
             return $this->success($reaction, 'Reaction updated successfully.');
 
         } catch (\Exception $e) {
-            \Log::error('Reaction store error: ' . $e->getMessage());
+            Log::error('Reaction store error: ' . $e->getMessage());
             return $this->error('Failed to update reaction.', 500, ['error' => $e->getMessage()]);
         }
     }

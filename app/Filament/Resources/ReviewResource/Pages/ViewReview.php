@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\ReviewResource\Pages;
 
-use App\Filament\Resources\ReviewResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ReviewResource;
 
-class EditReview extends EditRecord
+class ViewReview extends ViewRecord
 {
     protected static string $resource = ReviewResource::class;
 

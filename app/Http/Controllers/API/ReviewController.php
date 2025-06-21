@@ -8,13 +8,13 @@ use App\Helpers\Helper;
 use App\Models\Location;
 use App\Models\ReviewImage;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ReviewController extends Controller
 {
@@ -28,7 +28,7 @@ class ReviewController extends Controller
             'longitude' => 'required|numeric',
             'rating' => 'required|integer|in:1,2,3,4,5',
             'comment' => 'required|string|max:2000',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
         ]);
 
         try {

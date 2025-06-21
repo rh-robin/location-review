@@ -15,6 +15,7 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+   
 
     public static function form(Form $form): Form
     {
@@ -34,10 +35,13 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->sortable()
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->sortable()
                     ->date('d/m/Y'),
+
+
             ])
             ->filters([
                 //
@@ -45,8 +49,6 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\DeleteAction::make(),
             ]);
-
-
     }
 
     public static function getRelations(): array

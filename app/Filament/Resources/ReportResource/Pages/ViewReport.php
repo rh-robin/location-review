@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\ReportResource\Pages;
 
-use App\Filament\Resources\ReportResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ReportResource;
 
-class EditReport extends EditRecord
+class ViewReport extends ViewRecord
 {
     protected static string $resource = ReportResource::class;
 
