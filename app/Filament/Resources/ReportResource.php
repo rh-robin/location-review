@@ -141,18 +141,21 @@ class ReportResource extends Resource
                         Tables\Columns\TextColumn::make('user.name')
                             ->label('Reported By')
                             ->searchable()
+                            ->extraAttributes(['style' => 'padding-left: 15px;'])
                             ->sortable(),
 
                         Tables\Columns\TextColumn::make('reason')
                             ->label('Reason')
                             ->formatStateUsing(fn(string $state) => str($state)->title()->replace('_', ' '))
                             ->searchable()
+                            ->extraAttributes(['style' => 'padding-left: 15px;'])
                             ->sortable(),
 
                         Tables\Columns\TextColumn::make('description')
                             ->label('Description')
                             ->limit(50)
                             ->tooltip(fn($record) => $record->description)
+                            ->extraAttributes(['style' => 'padding-left: 15px;'])
                             ->searchable(),
 
                         Tables\Columns\TextColumn::make('status')
@@ -164,6 +167,7 @@ class ReportResource extends Resource
                                 'primary' => 'reviewed',
                                 'danger' => 'rejected',
                             ])
+                            ->extraAttributes(['style' => 'padding-left: 15px;'])
                             ->sortable(),
                     ])->space(2),
                 ])->space(3),
@@ -189,12 +193,11 @@ class ReportResource extends Resource
                 Tables\Actions\ViewAction::make()
                     ->modalHeading('Report Details')
                     ->modalWidth('lg'),
-                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+
                 ]),
             ]);
     }
@@ -225,14 +228,14 @@ class ReportResource extends Resource
                             ->hidden(fn($record) => !$record->other_reason)
                             ->columnSpan(['sm' => 1, 'md' => 1]),
                         Infolists\Components\TextEntry::make('description')
-                            ->label('Description')
-                            ->hint('Details provided by the reporter about the issue.')
-                            ->extraAttributes(['class' => 'p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm'])
-                            ->columnSpan(['sm' => 1, 'md' => 2]),
+                        ->label('Description')
+                        ->hint('Details provided by the reporter about the issue.')
+                        ->extraAttributes(['class' => 'p-4 bg-white/10 rounded-lg shadow-md text-white border border-gold-500/20'])
+                        ->columnSpan(['sm' => 1, 'md' => 2]),
                         Infolists\Components\ImageEntry::make('image')
                             ->label('Evidence Image')
                             ->disk('public')
-                            ->height(300)
+                            ->height(500)
                             ->defaultImageUrl('/images/default-review.jpg')
                             ->extraAttributes(['class' => 'hover:scale-105 transition-transform duration-200 cursor-pointer'])
                             ->action(
@@ -347,7 +350,6 @@ class ReportResource extends Resource
     {
         return [
             'index' => Pages\ListReports::route('/'),
-            'create' => Pages\CreateReport::route('/create'),
             'view' => Pages\ViewReport::route('/{record}'),
         ];
     }

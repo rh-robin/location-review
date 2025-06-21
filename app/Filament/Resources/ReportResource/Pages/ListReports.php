@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\ReportResource\Pages;
 
-use App\Filament\Resources\ReportResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\ReportResource;
 
 class ListReports extends ListRecords
 {
@@ -13,7 +13,7 @@ class ListReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+
         ];
     }
 }
