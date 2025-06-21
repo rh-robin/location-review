@@ -7,28 +7,34 @@ use App\Helpers\Helper;
 use App\Traits\ApiResponse;
 use App\Traits\ResponseTrait;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 
 class LogoutController extends Controller
 {
     use ApiResponse;
-    public function logout(): \Illuminate\Http\JsonResponse
+    public function logout(Request $request): \Illuminate\Http\JsonResponse
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->unauthorized('User not authenticated.');
+        }
+
         try {
-            if (auth()->check()) {
-                // For web-based Sanctum auth (cookies)
-                Auth::guard('web')->logout();
+            $user->currentAccessToken()?->delete(); // safe call with null check
 
-                // For API token-based auth (recommended for mobile/SPAs)
-                auth()->user()->currentAccessToken()->delete();
-
-                return $this->success('User logged out successfully');
-            }
-
-            return $this->error('User not authenticated');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage(), 500);
+            return $this->success(
+                data: null,
+                message: 'Logged out successfully.'
+            );
+        } catch (\Exception $e) {
+            return $this->error(
+                message: 'Logout failed. Please try again.',
+                status: 500,
+                errors: ['system_error' => $e->getMessage()]
+            );
         }
     }
 }

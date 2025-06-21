@@ -31,7 +31,7 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'location' => $user->location,
-                'avatar' => asset($user->avatar),
+                'avatar' => $user->avatar === null ? null : asset($user->avatar),
             ];
 
             return $this->success($profile, 'User profile retrieved successfully.');

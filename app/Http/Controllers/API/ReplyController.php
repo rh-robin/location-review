@@ -17,7 +17,22 @@ class ReplyController extends Controller
         $replies = Reply::with('user')
             ->where('review_id', $reviewId)
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($reply) {
+                return [
+                    'id' => $reply->id,
+                    'review_id' => $reply->review_id,
+                    'user_id' => $reply->user_id,
+                    'content' => $reply->content,
+                    'created_at' => $reply->created_at->format('F j, Y'),
+                    'updated_at' => $reply->updated_at->format('F j, Y'),
+                    'user' => $reply->user ? [
+                        'id' => $reply->user->id,
+                        'name' => $reply->user->name,
+                        'avatar' => $reply->user->avatar ? asset($reply->user->avatar) : null,
+                    ] : null
+                ];
+            });
 
         return $this->success(
             data: ['replies' => $replies],
