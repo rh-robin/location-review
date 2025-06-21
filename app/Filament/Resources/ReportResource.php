@@ -194,7 +194,7 @@ class ReportResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                   
                 ]),
             ]);
     }
@@ -210,7 +210,7 @@ class ReportResource extends Resource
                     ->columns(['sm' => 1, 'md' => 2, 'lg' => 3])
                     ->schema([
                         Infolists\Components\Card::make([
-                            
+
                             Infolists\Components\TextEntry::make('user.name')
                                 ->label('Reported By')
                                 ->icon('heroicon-o-user')

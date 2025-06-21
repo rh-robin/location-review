@@ -34,7 +34,7 @@ class ResetPasswordController extends Controller
                 );
             }
 
-            Mail::to($email)->send(new OtpMail($otp, $user, 'Reset Your Password'));
+            //Mail::to($email)->send(new OtpMail($otp, $user, 'Reset Your Password'));
 
             $user->update([
                 'otp' => $otp,
@@ -45,7 +45,7 @@ class ResetPasswordController extends Controller
 
             return $this->success(
                 data: $user,
-                message: 'OTP sent successfully.'
+                message: 'OTP sent successfully.'.$otp
             );
 
         } catch (Exception $e) {

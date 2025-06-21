@@ -38,10 +38,10 @@ class RegisterController extends Controller
                 'is_verified' => false
             ]);
             // Send OTP email
-            Mail::to($user->email)->send(new OtpMail($otp, $user, 'Verify Your Email Address'));
+            //Mail::to($user->email)->send(new OtpMail($otp, $user, 'Verify Your Email Address'));
             return $this->success(
                 data: $user,
-                message: 'Registration successful. Please check your email for verification code.'
+                message: 'Registration successful. Please check your email for verification code.'.$otp
             );
         } catch (Exception $e) {
             Log::error('Register Error', (array)$e->getMessage());
@@ -115,9 +115,9 @@ class RegisterController extends Controller
             $user->otp            = $newOtp;
             $user->otp_expires_at = $otpExpiresAt;
             $user->save();
-            Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
+            //Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
 
-            return  $this->success($user, 'OTP sent successfully.');
+            return  $this->success($user, 'OTP sent successfully.'.$newOtp);
         } catch (Exception $e) {
             return  $this->error(
                 'Something went wrong',
