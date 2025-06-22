@@ -109,7 +109,7 @@ class ReviewController extends Controller
             });
 
             if ($review->user) {
-                $review->user->avatar = asset($review->user->avatar);
+                $review->user->avatar = $review->user->avatar === null ? null : asset($review->user->avatar);
             }
 
             return $this->success([
@@ -247,7 +247,7 @@ class ReviewController extends Controller
                     return [
                         'id' => $image->id,
                         'review_id' => $image->review_id,
-                        'image' => asset($image->image),
+                        'image' => asset('storage/'.$image->image),
                         'created_at' => \Carbon\Carbon::parse($image->created_at)->format('F j, Y'),
                         'updated_at' => \Carbon\Carbon::parse($image->updated_at)->format('F j, Y'),
                     ];
@@ -255,7 +255,7 @@ class ReviewController extends Controller
 
                 // User avatar URL
                 if (!empty($review->user)) {
-                    $reviewData['user']['avatar'] = $review->user->avatar ? asset($review->user->avatar) : null;
+                    $reviewData['user']['avatar'] = $review->user->avatar ? asset('storage/'.$review->user->avatar) : null;
                 }
 
                 // Add user reaction

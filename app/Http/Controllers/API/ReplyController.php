@@ -29,7 +29,7 @@ class ReplyController extends Controller
                     'user' => $reply->user ? [
                         'id' => $reply->user->id,
                         'name' => $reply->user->name,
-                        'avatar' => $reply->user->avatar ? asset($reply->user->avatar) : null,
+                        'avatar' => $reply->user->avatar ? asset('storage/'.$reply->user->avatar) : null,
                     ] : null
                 ];
             });
@@ -84,7 +84,7 @@ class ReplyController extends Controller
         $userData = [
             'id' => $user->id,
             'name' => $user->name,
-            'avatar' => $user->avatar ? asset($user->avatar) : null,
+            'avatar' => $user->avatar ? asset('storage/'.$user->avatar) : null,
         ];
 
         // Format the reply data

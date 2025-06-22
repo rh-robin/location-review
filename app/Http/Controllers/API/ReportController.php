@@ -44,10 +44,18 @@ class ReportController extends Controller
                 'image' => $imagePath,
             ]
         );
+        if ($report){
+            $report->image = $report->image ? asset('storage/'.$report->image) : null;
+        }
 
         return $this->success(
             data: $report,
             message: 'Report submitted successfully'
         );
     }
+
+
+
+
+
 }
