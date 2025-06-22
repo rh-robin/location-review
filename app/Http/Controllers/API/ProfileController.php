@@ -32,7 +32,7 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'location' => $user->location,
-                'avatar' => $user->avatar === null ? null : asset($user->avatar),
+                'avatar' => $user->avatar === null ? null : asset('storage/'.$user->avatar),
             ];
 
             return $this->success($profile, 'User profile retrieved successfully.');
@@ -107,7 +107,7 @@ class ProfileController extends Controller
 
             return $this->success([
                 'message' => 'Avatar updated successfully',
-                'avatar_url' => asset($user->avatar),
+                'avatar_url' => asset('storage/'.$user->avatar),
             ]);
         } catch (\Exception $e) {
             Log::error('Avatar Update Error: ' . $e->getMessage());

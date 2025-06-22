@@ -45,7 +45,7 @@ class ReportController extends Controller
             ]
         );
         if ($report){
-            $report->image = $report->image ? asset($report->image) : null;
+            $report->image = $report->image ? asset('storage/'.$report->image) : null;
         }
 
         return $this->success(
