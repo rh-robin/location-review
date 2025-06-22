@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Auth\LogoutController;
+use App\Http\Controllers\API\ContactController;
 use App\Http\Controllers\API\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reply', [ReplyController::class, 'store']);
 
 
+    Route::post('/contact', [ContactController::class, 'store']);
+
+
     //profile
     Route::get('/profile/personal-info', [ProfileController::class, 'getPersonalInfo']);
     Route::post('/profile/personal-info/update', [ProfileController::class, 'updatePersonalInfo']);
@@ -45,5 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/change-avatar', [ProfileController::class, 'changeAvatar']);
     Route::get('/profile/my-reviews', [ProfileController::class, 'getMyReviews']);
     Route::get('/profile/my-replies', [ProfileController::class, 'getMyReplies']);
+    Route::get('/profile/my-reports', [ProfileController::class, 'getMyReports']);
 
 });

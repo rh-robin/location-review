@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\Reply;
+use App\Models\Report;
 use App\Models\Review;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -273,6 +274,67 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             Log::error('Get My Replies Error: ' . $e->getMessage());
             return $this->error('Failed to fetch replies', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+
+    public function getMyReports()
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated.');
+            }
+
+            // Fetch reports with related review and location
+            $reports = Report::with([
+                'review' => function ($query) {
+                    $query->with('location');
+                }
+            ])
+                ->where('user_id', $user->id)
+                ->latest()
+                ->get();
+
+            // Format each report
+            $transformedReports = $reports->map(function ($report) {
+                $review = $report->review;
+
+                return [
+                    'report_id' => $report->id,
+                    'reason' => $report->reason,
+                    'description' => $report->description,
+                    'image_url' => $report->image ? asset($report->image) : null,
+                    'status' => $report->status,
+                    'created_at' => \Carbon\Carbon::parse($report->created_at)->format('F j, Y'),
+
+                    'review' => $review ? [
+                        'id' => $review->id,
+                        'rating' => $review->rating,
+                        'comment' => $review->comment,
+                        'created_at' => \Carbon\Carbon::parse($review->created_at)->format('F j, Y'),
+                        'location' => $review->location ? [
+                            'id' => $review->location->id,
+                            'name' => $review->location->name,
+                            'latitude' => $review->location->latitude,
+                            'longitude' => $review->location->longitude,
+                        ] : null,
+                    ] : null,
+                ];
+            });
+
+            return $this->success(
+                data: ['reports' => $transformedReports],
+                message: 'User reports fetched successfully.'
+            );
+
+        } catch (\Exception $e) {
+            \Log::error('My Reports Error', ['error' => $e->getMessage()]);
+            return $this->error(
+                message: 'Failed to fetch reports.',
+                status: 500,
+                errors: ['system_error' => $e->getMessage()]
+            );
         }
     }
 
