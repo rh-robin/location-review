@@ -50,7 +50,6 @@ class User extends Authenticatable implements FilamentUser,HasAvatar
         'otp',
         'otp_created_at',
         'otp_expires_at',
-        'reset_password_token',
         'reset_password_token_expire_at',
         'delete_token',
         'delete_token_expires_at',
