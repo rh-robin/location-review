@@ -286,11 +286,10 @@ class ProfileController extends Controller
                 return $this->unauthorized('User not authenticated.');
             }
 
-            // Fetch reports with related review and location
+            // Fetch reports with related review, location, and replies
             $reports = Report::with([
-                'review' => function ($query) {
-                    $query->with('location');
-                }
+                'review.location',
+                'replies.user:id,name,avatar',
             ])
                 ->where('user_id', $user->id)
                 ->latest()
@@ -300,19 +299,34 @@ class ProfileController extends Controller
             $transformedReports = $reports->map(function ($report) {
                 $review = $report->review;
 
+                // Format replies
+                $replies = $report->replies->map(function ($reply) {
+                    return [
+                        'id' => $reply->id,
+                        'report_id' => $reply->report_id,
+                        'reply' => $reply->reply,
+                        'user' => [
+                            'id' => $reply->user->id,
+                            'name' => $reply->user->name,
+                            'avatar' => $reply->user->avatar ? asset($reply->user->avatar) : null,
+                        ],
+                        'created_at' => $reply->created_at->format('F j, Y'),
+                    ];
+                });
+
                 return [
                     'report_id' => $report->id,
                     'reason' => $report->reason,
                     'description' => $report->description,
                     'image_url' => $report->image ? asset($report->image) : null,
                     'status' => $report->status,
-                    'created_at' => \Carbon\Carbon::parse($report->created_at)->format('F j, Y'),
+                    'created_at' => $report->created_at->format('F j, Y'),
 
                     'review' => $review ? [
                         'id' => $review->id,
                         'rating' => $review->rating,
                         'comment' => $review->comment,
-                        'created_at' => \Carbon\Carbon::parse($review->created_at)->format('F j, Y'),
+                        'created_at' => $review->created_at->format('F j, Y'),
                         'location' => $review->location ? [
                             'id' => $review->location->id,
                             'name' => $review->location->name,
@@ -320,6 +334,8 @@ class ProfileController extends Controller
                             'longitude' => $review->location->longitude,
                         ] : null,
                     ] : null,
+
+                    'replies' => $replies,
                 ];
             });
 
@@ -337,6 +353,7 @@ class ProfileController extends Controller
             );
         }
     }
+
 
 
 
