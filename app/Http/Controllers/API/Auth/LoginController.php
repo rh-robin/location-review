@@ -99,7 +99,8 @@ class LoginController extends Controller
                     'provider'          => $provider,
                     'provider_id'       => $socialUser->getId(),
                     'email_verified_at' => now(),
-                    'role'              => 'user',
+                    'is_verified'       => true,
+                    'user_type'         => 'user',
                 ]);
 
                 $isNewUser = true;
@@ -118,7 +119,7 @@ class LoginController extends Controller
                         'name'       => $user->name,
                         'email'      => $user->email,
                         'is_verified'=> $user->email_verified_at !== null,
-                        'role'       => $user->role,
+                        'user_type'  => $user->user_type,
                     ],
                 ],
                 message: $isNewUser ? 'User registered and logged in successfully.' : 'Login successful.'
