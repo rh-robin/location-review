@@ -19,6 +19,8 @@ Route::post('/verify-email', [RegisterController::class, 'VerifyEmail']);
 Route::post('/resend-otp', [RegisterController::class, 'ResendOtp']);
 //login
 Route::post('login', [LoginController::class, 'Login']);
+//social login
+Route::post('socialLogin', [LoginController::class, 'socialLogin']);
 //forgot password
 Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword']);
 Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
