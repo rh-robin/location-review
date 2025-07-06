@@ -42,6 +42,9 @@ class User extends Authenticatable implements FilamentUser,HasAvatar
         'avatar_url',
         'user_type',
         'is_verified',
+        'email_verified_at',
+        'provider',
+        'provider_id',
     ];
 
     protected $hidden = [
@@ -50,7 +53,6 @@ class User extends Authenticatable implements FilamentUser,HasAvatar
         'otp',
         'otp_created_at',
         'otp_expires_at',
-        'reset_password_token',
         'reset_password_token_expire_at',
         'delete_token',
         'delete_token_expires_at',

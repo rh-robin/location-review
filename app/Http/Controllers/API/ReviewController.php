@@ -41,45 +41,24 @@ class ReviewController extends Controller
             DB::beginTransaction();
 
             // 1. Find or create location
-            $location = Location::where('latitude', $validated['latitude'])
-                ->where('longitude', $validated['longitude'])
-                ->first();
-
-            if (!$location) {
-                $location = Location::create([
-                    'name' => $validated['location_name'],
+            $location = Location::firstOrCreate(
+                [
                     'latitude' => $validated['latitude'],
                     'longitude' => $validated['longitude'],
+                ],
+                [
+                    'name' => $validated['location_name'],
                     'status' => 'active',
-                ]);
-            }
+                ]
+            );
 
-            // 2. Find existing review by the user for this location
-            $review = Review::where('location_id', $location->id)
-                ->where('user_id', $user->id)
-                ->first();
-
-            $isNew = false;
-
-            if ($review) {
-                // Update existing review
-                $review->update([
-                    'rating' => $validated['rating'],
-                    'comment' => $validated['comment'],
-                ]);
-
-                // Delete old images
-                ReviewImage::where('review_id', $review->id)->delete();
-            } else {
-                // Create new review
-                $review = Review::create([
-                    'location_id' => $location->id,
-                    'user_id' => $user->id,
-                    'rating' => $validated['rating'],
-                    'comment' => $validated['comment'],
-                ]);
-                $isNew = true;
-            }
+            // 2. Always create a new review
+            $review = Review::create([
+                'location_id' => $location->id,
+                'user_id' => $user->id,
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'],
+            ]);
 
             // 3. Handle review images (if any)
             if ($request->hasFile('images')) {
@@ -96,10 +75,10 @@ class ReviewController extends Controller
 
             DB::commit();
 
-            // 4. Reload review with relations and format the response
+            // 4. Load relationships and format response
             $review->load(['user:id,name,avatar', 'images']);
             $review->like_count = $review->reactions()->where('type', 'like')->count();
-            $review->user_reacted = null; // Since this is the current user's own review
+            $review->user_reacted = null; // For own review
             $review->created_at = $review->created_at->format('F j, Y');
             $review->updated_at = $review->updated_at->format('F j, Y');
 
@@ -109,12 +88,12 @@ class ReviewController extends Controller
             });
 
             if ($review->user) {
-                $review->user->avatar = $review->user->avatar === null ? null : asset($review->user->avatar);
+                $review->user->avatar = $review->user->avatar ? asset($review->user->avatar) : null;
             }
 
             return $this->success([
                 'review' => $review
-            ], $isNew ? 'Review submitted successfully.' : 'Review updated successfully.');
+            ], 'Review submitted successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -122,6 +101,7 @@ class ReviewController extends Controller
             return $this->error('Failed to submit review.', 500, ['error' => $e->getMessage()]);
         }
     }
+
 
 
 
@@ -201,6 +181,7 @@ class ReviewController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'date' => 'nullable|in:newest,oldest', // Add validation for optional date input
         ]);
 
         try {
@@ -211,6 +192,7 @@ class ReviewController extends Controller
 
             $latitude = $request->latitude;
             $longitude = $request->longitude;
+            $sortOrder = $request->date === 'oldest' ? 'asc' : 'desc'; // Default is newest
 
             $location = Location::where('latitude', $latitude)
                 ->where('longitude', $longitude)
@@ -231,7 +213,7 @@ class ReviewController extends Controller
                     $query->where('user_id', optional($user)->id);
                 }])
                 ->where('location_id', $location->id)
-                ->latest()
+                ->orderBy('updated_at', $sortOrder) // Apply sorting by updated_at
                 ->get();
 
             // Transform each review
@@ -247,7 +229,7 @@ class ReviewController extends Controller
                     return [
                         'id' => $image->id,
                         'review_id' => $image->review_id,
-                        'image' => asset('storage/'.$image->image),
+                        'image' => asset('storage/' . $image->image),
                         'created_at' => \Carbon\Carbon::parse($image->created_at)->format('F j, Y'),
                         'updated_at' => \Carbon\Carbon::parse($image->updated_at)->format('F j, Y'),
                     ];
@@ -255,7 +237,7 @@ class ReviewController extends Controller
 
                 // User avatar URL
                 if (!empty($review->user)) {
-                    $reviewData['user']['avatar'] = $review->user->avatar ? asset('storage/'.$review->user->avatar) : null;
+                    $reviewData['user']['avatar'] = $review->user->avatar ? asset('storage/' . $review->user->avatar) : null;
                 }
 
                 // Add user reaction
@@ -285,5 +267,6 @@ class ReviewController extends Controller
             return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
         }
     }
+
 
 }
