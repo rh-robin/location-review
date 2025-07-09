@@ -29,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [LogoutController::class, 'logout']);
     //store location data
     Route::post('/store-review', [ReviewController::class, 'storeReview']);
+    Route::post('/update-review/{id}', [ReviewController::class, 'updateReview']);
+    Route::delete('/delete-review/{id}', [ReviewController::class, 'deleteReview']);
     Route::post('/store-report', [ReportController::class, 'store']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
 

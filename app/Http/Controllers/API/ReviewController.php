@@ -83,12 +83,12 @@ class ReviewController extends Controller
             $review->updated_at = $review->updated_at->format('F j, Y');
 
             $review->images = $review->images->map(function ($image) {
-                $image->image = asset($image->image);
+                $image->image = asset('storage/' . $image->image);
                 return $image;
             });
 
             if ($review->user) {
-                $review->user->avatar = $review->user->avatar ? asset($review->user->avatar) : null;
+                $review->user->avatar = $review->user->avatar ? asset('storage/' . $review->user->avatar) : null;
             }
 
             return $this->success([
@@ -103,77 +103,96 @@ class ReviewController extends Controller
     }
 
 
-
-
-
-    /*public function fetchReview(Request $request)
+    /*============ update review ==============*/
+    public function updateReview(Request $request, $reviewId)
     {
-        $request->validate([
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+        $validated = $request->validate([
+            'rating' => 'required|integer|in:1,2,3,4,5',
+            'comment' => 'required|string|max:2000',
+            'deleted_images' => 'nullable|array',
+            'deleted_images.*' => 'integer|exists:review_images,id',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
         ]);
 
         try {
             $user = auth()->user();
             if (!$user) {
-                return $this->unauthorized('User not authenticated');
-            }
-            $latitude = $request->latitude;
-            $longitude = $request->longitude;
-
-            $location = Location::where('latitude', $latitude)
-                ->where('longitude', $longitude)
-                ->first();
-
-            if (!$location) {
-                return $this->notFound('Location not found');
+                return $this->unauthorized('User not authenticated.');
             }
 
-            // Fetch reviews with user, images, like count, and the authenticated user's reaction
-            $reviews = Review::with(['user:id,name', 'images'])
-                ->withCount([
-                    'reactions as like_count' => function ($query) {
-                        $query->where('type', 'like');
-                    }
-                ])
-                ->with(['reactions' => function ($query) use ($user) {
-                    $query->where('user_id', optional($user)->id);
-                }])
-                ->where('location_id', $location->id)
-                ->latest()
-                ->get();
+            $review = Review::with('images')->find($reviewId);
 
-            // Append 'user_reacted' key to each review
-            $reviews->transform(function ($review) {
-                $review->created_at = $review->created_at->format('F j, Y');
-                $review->updated_at = $review->updated_at->format('F j, Y');
-                $review->images = $review->images->map(function ($image) {
-                    $image->image = asset($image->image);
-                    return $image;
-                });
-                $review->user_reacted = optional($review->reactions->first())->type ?? null;
-                unset($review->reactions); // remove the reactions array (optional)
-                return $review;
+            if (!$review) {
+                return $this->notFound('Review not found.');
+            }
+
+            if ($review->user_id !== $user->id) {
+                return $this->unauthorized('You are not authorized to update this review.');
+            }
+
+            DB::beginTransaction();
+
+            // 1. Update review content
+            $review->update([
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'],
+            ]);
+
+            // 2. Delete selected images
+            if (!empty($validated['deleted_images'])) {
+                $imagesToDelete = ReviewImage::whereIn('id', $validated['deleted_images'])->get();
+
+                foreach ($imagesToDelete as $img) {
+                    Helper::fileDelete(public_path('storage/' . $img->image));
+                    $img->delete();
+                }
+            }
+
+            // 3. Upload new images
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $randomString = Str::random(10);
+                    $uploadedPath = Helper::fileUpload($image, 'review_images', $randomString);
+
+                    ReviewImage::create([
+                        'review_id' => $review->id,
+                        'image' => $uploadedPath,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // 4. Load relationships and format response
+            $review->load(['user:id,name,avatar', 'images']);
+            $review->like_count = $review->reactions()->where('type', 'like')->count();
+            $review->user_reacted = null;
+            $review->created_at = $review->created_at->format('F j, Y');
+            $review->updated_at = $review->updated_at->format('F j, Y');
+
+            $review->images = $review->images->map(function ($image) {
+                $image->image = asset('storage/' . $image->image);
+                return $image;
             });
 
-            $averageRating = $reviews->avg('rating');
+            if ($review->user) {
+                $review->user->avatar = $review->user->avatar ? asset('storage/' . $review->user->avatar) : null;
+            }
 
             return $this->success([
-                'location' => [
-                    'id' => $location->id,
-                    'name' => $location->name,
-                    'latitude' => $location->latitude,
-                    'longitude' => $location->longitude,
-                ],
-                'average_rating' => round($averageRating, 2),
-                'reviews' => $reviews->toArray(),
-            ], 'Reviews fetched successfully');
+                'review' => $review
+            ], 'Review updated successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Fetch Review Error: ' . $e->getMessage());
-            return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
+            DB::rollBack();
+            Log::error('Review update error: ' . $e->getMessage());
+
+            return $this->error('Failed to update review.', 500, [
+                'error' => $e->getMessage()
+            ]);
         }
-    }*/
+    }
+
 
 
     public function fetchReview(Request $request)
@@ -267,6 +286,52 @@ class ReviewController extends Controller
             return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
         }
     }
+
+
+
+    public function deleteReview($reviewId)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorized('User not authenticated.');
+            }
+
+            $review = Review::with('images')->find($reviewId);
+
+            if (!$review) {
+                return $this->notFound('Review not found.');
+            }
+
+            if ($review->user_id !== $user->id) {
+                return $this->unauthorized('You are not authorized to delete this review.');
+            }
+
+            DB::beginTransaction();
+
+            // Delete all associated images
+            foreach ($review->images as $image) {
+                Helper::fileDelete(public_path('storage/' . $image->image));
+                $image->delete();
+            }
+
+            // Delete the review itself
+            $review->delete();
+
+            DB::commit();
+
+            return $this->success(null, 'Review deleted successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Review delete error: ' . $e->getMessage());
+
+            return $this->error('Failed to delete review.', 500, [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
 
 
 }
