@@ -31,8 +31,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/store-review', [ReviewController::class, 'storeReview']);
     Route::post('/update-review/{id}', [ReviewController::class, 'updateReview']);
     Route::delete('/delete-review/{id}', [ReviewController::class, 'deleteReview']);
-    Route::post('/store-report', [ReportController::class, 'store']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
+
+    //replay
+    Route::get('/reviews/{reviewId}/replies', [ReplyController::class, 'index']);
+    Route::post('/reply', [ReplyController::class, 'store']);
+    Route::post('/update-reply/{id}', [ReplyController::class, 'update']);
+    Route::post('/delete-reply/{id}', [ReplyController::class, 'delete']);
+
+
+    //report
+    Route::post('/store-report', [ReportController::class, 'store']);
+    Route::post('/update-report/{id}', [ReportController::class, 'update']);
+    Route::delete('/delete-report/{id}', [ReportController::class, 'delete']);
 
     Route::post('/reaction', [ReactionCoontroller::class, 'store']);
     Route::get('/reviews/{reviewId}/reactions/counts', [ReactionCoontroller::class, 'getCounts']);

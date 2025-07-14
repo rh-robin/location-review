@@ -59,7 +59,6 @@ class ReportController extends Controller
     public function update(Request $request, $reportId)
     {
         $validated = $request->validate([
-            'review_id' => 'required|exists:reviews,id',
             'reason' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
@@ -87,7 +86,6 @@ class ReportController extends Controller
 
             // 1. Update report content
             $report->update([
-                'review_id' => intval($validated['review_id']),
                 'reason' => $validated['reason'],
                 'description' => $validated['description'],
             ]);
