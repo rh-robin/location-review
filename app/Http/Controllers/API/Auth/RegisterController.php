@@ -41,7 +41,7 @@ class RegisterController extends Controller
             //Mail::to($user->email)->send(new OtpMail($otp, $user, 'Verify Your Email Address'));
             return $this->success(
                 data: $user,
-                message: 'Registration successful. Please check your email for verification code.'.$otp
+                message: 'Registration successful. Please check your email for verification code.'
             );
         } catch (Exception $e) {
             Log::error('Register Error', (array)$e->getMessage());

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Report;
 use App\Helpers\Helper;
+use App\Models\Review;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,10 @@ class ReportController extends Controller
             $fileName = Str::random(10);
             $imagePath = Helper::fileUpload($file, 'reports', $fileName);
         }
+
+        $review = Review::find($request->review_id);
+        $reviewer = $review->user;
+        $location = $review->location;
 
         // Create or update report
         $report = Report::updateOrCreate(
