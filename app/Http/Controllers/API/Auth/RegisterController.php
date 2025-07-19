@@ -38,7 +38,7 @@ class RegisterController extends Controller
                 'is_verified' => false
             ]);
             // Send OTP email
-            //Mail::to($user->email)->send(new OtpMail($otp, $user, 'Verify Your Email Address'));
+            Mail::to($user->email)->send(new OtpMail($otp, $user, 'Verify Your Email Address'));
             return $this->success(
                 data: $user,
                 message: 'Registration successful. Please check your email for verification code.'
