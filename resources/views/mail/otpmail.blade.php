@@ -5,7 +5,7 @@
                style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">{{ htmlspecialchars($header_message) }}</a>
         </div>
         <p style="font-size:1.1em">Hi, {{$user->name}}</p>
-        <p>Thank you for choosing Your Brand. Use the following OTP to complete your Sign-Up procedures. OTP is valid
+        <p>Thank you for choosing Betacompass. Use the following OTP to complete your Sign-Up procedures. OTP is valid
             for 1 hour</p>
         <h2
             style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">
