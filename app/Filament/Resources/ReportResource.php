@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use Filament\Forms;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Tables;
 use App\Models\Report;
 use Filament\Infolists;
@@ -232,7 +233,42 @@ class ReportResource extends Resource
                         Infolists\Components\TextEntry::make('review.location.name')
                             ->label('Review Location')
                             ->icon('heroicon-o-map-pin')
-                            ->columnSpan(['sm' => 1, 'md' => 2]),
+                            ->columnSpan(['sm' => 1, 'md' => 1]),
+
+                        // ✅ New - Review Comment
+                        Infolists\Components\TextEntry::make('review.comment')
+                            ->label('Review Comment')
+                            ->icon('heroicon-o-chat-bubble-left')
+                            ->extraAttributes(['class' => 'border-l-4 border-primary-400 pl-4 bg-white/5 rounded-md'])
+                            ->columnSpan(['sm' => 1, 'md' => 1]),
+
+                        // ✅ New - Review Images
+                        Infolists\Components\RepeatableEntry::make('review.images')
+                            ->label('Review Images')
+                            ->schema([
+                                ImageEntry::make('image')
+                                    ->disk('public')
+                                    ->height(180)
+                                    ->defaultImageUrl('/images/default-review.jpg')
+                                    ->action(
+                                        Action::make('view_review_image')
+                                            ->label('View Full Image')
+                                            ->url(function ($record) {
+                                                $imagePath = data_get($record, 'image');
+
+                                                return $imagePath ? asset('storage/' . $imagePath) : null;
+                                            })
+                                            ->openUrlInNewTab()
+                                    )
+                                    ->extraAttributes(['class' => 'hover:scale-105 transition duration-200 cursor-pointer']),
+                            ])
+                            ->grid([
+                                'default' => 2,
+                                'md' => 3,
+                                'lg' => 4,
+                            ])
+                            ->columnSpanFull(),
+
                         Infolists\Components\TextEntry::make('reason')
                             ->label('Reason')
                             ->formatStateUsing(fn(string $state) => str($state)->title()->replace('_', ' '))

@@ -58,7 +58,6 @@ class ReportController extends Controller
 
             // 🔔 Send email to review author
             if ($reviewer && $reviewer->email) {
-                dd($report->image);
                 Mail::to($reviewer->email)->send(new ReviewReportedMail($report));
             }
         }

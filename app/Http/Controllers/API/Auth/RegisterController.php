@@ -115,9 +115,9 @@ class RegisterController extends Controller
             $user->otp            = $newOtp;
             $user->otp_expires_at = $otpExpiresAt;
             $user->save();
-            //Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
+            Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
 
-            return  $this->success($user, 'OTP sent successfully.'.$newOtp);
+            return  $this->success($user, 'OTP sent successfully.');
         } catch (Exception $e) {
             return  $this->error(
                 'Something went wrong',
