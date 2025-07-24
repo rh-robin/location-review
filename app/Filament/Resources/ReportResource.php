@@ -28,6 +28,11 @@ class ReportResource extends Resource
 
     protected static ?string $modelLabel = 'Report';
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['review.user', 'review.location', 'user']); // eager load
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -219,10 +224,19 @@ class ReportResource extends Resource
                                 ->icon('heroicon-o-user')
                                 ->columnSpan(['sm' => 1, 'md' => 1]),
                         ])->columns(['sm' => 1, 'md' => 2]),
+                        Infolists\Components\TextEntry::make('review.user.name')
+                            ->label('Review Author')
+                            ->icon('heroicon-o-user-circle')
+                            ->columnSpan(['sm' => 1, 'md' => 1]),
+
+                        Infolists\Components\TextEntry::make('review.location.name')
+                            ->label('Review Location')
+                            ->icon('heroicon-o-map-pin')
+                            ->columnSpan(['sm' => 1, 'md' => 2]),
                         Infolists\Components\TextEntry::make('reason')
                             ->label('Reason')
                             ->formatStateUsing(fn(string $state) => str($state)->title()->replace('_', ' '))
-                            ->columnSpan(['sm' => 1, 'md' => 1]),
+                            ->columnSpan(['sm' => 1, 'md' => 2]),
                         Infolists\Components\TextEntry::make('other_reason')
                             ->label('Other Reason Details')
                             ->hidden(fn($record) => !$record->other_reason)
@@ -231,7 +245,7 @@ class ReportResource extends Resource
                         ->label('Description')
                         ->hint('Details provided by the reporter about the issue.')
                         ->extraAttributes(['class' => 'p-4 bg-white/10 rounded-lg shadow-md text-white border border-gold-500/20'])
-                        ->columnSpan(['sm' => 1, 'md' => 2]),
+                        ->columnSpan(['sm' => 1, 'md' => 3]),
                         Infolists\Components\ImageEntry::make('image')
                             ->label('Evidence Image')
                             ->disk('public')

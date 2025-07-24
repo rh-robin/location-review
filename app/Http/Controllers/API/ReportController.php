@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Mail\ReviewReportedMail;
 use App\Models\Report;
 use App\Helpers\Helper;
 use App\Models\Review;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -53,6 +55,12 @@ class ReportController extends Controller
         );
         if ($report) {
             $report->image = $report->image ? asset('storage/' . $report->image) : null;
+
+            // 🔔 Send email to review author
+            if ($reviewer && $reviewer->email) {
+                dd($report->image);
+                Mail::to($reviewer->email)->send(new ReviewReportedMail($report));
+            }
         }
 
         return $this->success(
