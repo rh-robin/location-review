@@ -291,6 +291,18 @@ class ReviewController extends Controller
                 // Add user reaction
                 $reviewData['user_reacted'] = optional($review->reactions->first())->type ?? null;
 
+                // Add role from UserLocation if exists
+                $role = null;
+                if (!empty($review->user) && !empty($review->location_id)) {
+                    $userLocation = UserLocation::where('user_id', $review->user->id)
+                        ->where('location_id', $review->location_id)
+                        ->first();
+                    if ($userLocation) {
+                        $role = $userLocation->role;
+                    }
+                }
+                $reviewData['role'] = $role;
+
                 // Add report status based on all reports
                 $reports = $review->reports;
                 $reportStatus = null;
@@ -428,6 +440,18 @@ class ReviewController extends Controller
                         'longitude' => $review->location->longitude,
                     ];
                 }
+
+                // Add role from UserLocation if exists
+                $role = null;
+                if (!empty($review->user) && !empty($review->location)) {
+                    $userLocation = UserLocation::where('user_id', $review->user->id)
+                        ->where('location_id', $review->location->id)
+                        ->first();
+                    if ($userLocation) {
+                        $role = $userLocation->role;
+                    }
+                }
+                $reviewData['role'] = $role;
 
                 // Add report status based on all reports
                 $reports = $review->reports;
