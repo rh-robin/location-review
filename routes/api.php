@@ -25,6 +25,7 @@ Route::post('socialLogin', [LoginController::class, 'socialLogin']);
 Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword']);
 Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
 Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [LogoutController::class, 'logout']);
     //store location data

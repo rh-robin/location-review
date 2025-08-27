@@ -74,4 +74,20 @@ class User extends Authenticatable implements FilamentUser,HasAvatar
     {
         return $this->avatar;
     }
+
+    public function userLocations()
+    {
+        return $this->hasMany(UserLocation::class);
+    }
+
+    public function reviewsForLocation($locationId)
+    {
+        return $this->reviews()->where('location_id', $locationId);
+    }
+
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

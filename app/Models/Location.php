@@ -15,4 +15,9 @@ class Location extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function userLocations()
+    {
+        return $this->hasMany(UserLocation::class);
+    }
 }

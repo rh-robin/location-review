@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\UserLocation;
 use Exception;
 use App\Models\Review;
 use App\Helpers\Helper;
@@ -29,6 +30,7 @@ class ReviewController extends Controller
             'rating' => 'required|integer|in:1,2,3,4,5',
             'comment' => 'required|string|max:2000',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
+            'role' => 'nullable|in:former_tenant,current_tenant,landlord',
         ]);
 
         try {
@@ -52,7 +54,20 @@ class ReviewController extends Controller
                 ]
             );
 
-            // 2. Always create a new review
+            // 2. Store user-location role only if role is provided
+            if ($validated['role']) {
+                UserLocation::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'location_id' => $location->id,
+                    ],
+                    [
+                        'role' => $validated['role'],
+                    ]
+                );
+            }
+
+            // 3. Always create a new review
             $review = Review::create([
                 'location_id' => $location->id,
                 'user_id' => $user->id,
@@ -60,7 +75,7 @@ class ReviewController extends Controller
                 'comment' => $validated['comment'],
             ]);
 
-            // 3. Handle review images (if any)
+            // 4. Handle review images (if any)
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $randomString = Str::random(10);
@@ -75,7 +90,7 @@ class ReviewController extends Controller
 
             DB::commit();
 
-            // 4. Load relationships and format response
+            // 5. Load relationships and format response
             $review->load(['user:id,name,avatar', 'images']);
             $review->like_count = $review->reactions()->where('type', 'like')->count();
             $review->user_reacted = null; // For own review
@@ -112,6 +127,7 @@ class ReviewController extends Controller
             'deleted_images' => 'nullable|array',
             'deleted_images.*' => 'integer|exists:review_images,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:20048',
+            'role' => 'nullable|in:former_tenant,current_tenant,landlord',
         ]);
 
         try {
@@ -132,13 +148,26 @@ class ReviewController extends Controller
 
             DB::beginTransaction();
 
-            // 1. Update review content
+            // 1. Update user-location role only if role is provided
+            if ($validated['role']) {
+                UserLocation::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'location_id' => $review->location_id,
+                    ],
+                    [
+                        'role' => $validated['role'],
+                    ]
+                );
+            }
+
+            // 2. Update review content
             $review->update([
                 'rating' => $validated['rating'],
                 'comment' => $validated['comment'],
             ]);
 
-            // 2. Delete selected images
+            // 3. Delete selected images
             if (!empty($validated['deleted_images'])) {
                 $imagesToDelete = ReviewImage::whereIn('id', $validated['deleted_images'])->get();
 
@@ -148,7 +177,7 @@ class ReviewController extends Controller
                 }
             }
 
-            // 3. Upload new images
+            // 4. Upload new images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $randomString = Str::random(10);
@@ -163,7 +192,7 @@ class ReviewController extends Controller
 
             DB::commit();
 
-            // 4. Load relationships and format response
+            // 5. Load relationships and format response
             $review->load(['user:id,name,avatar', 'images']);
             $review->like_count = $review->reactions()->where('type', 'like')->count();
             $review->user_reacted = null;
