@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update-review/{id}', [ReviewController::class, 'updateReview']);
     Route::delete('/delete-review/{id}', [ReviewController::class, 'deleteReview']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
+    Route::get('/fetch-review/latest', [ReviewController::class, 'fetchRecentReviews']);
 
     //replay
     Route::get('/reviews/{reviewId}/replies', [ReplyController::class, 'index']);

@@ -107,7 +107,6 @@ class ReportResource extends Resource
                             ->label('Report Status')
                             ->options([
                                 'pending' => 'Pending',
-                                'reviewed' => 'Reviewed',
                                 'resolved' => 'Resolved',
                                 'rejected' => 'Rejected',
                             ])

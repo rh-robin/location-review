@@ -250,8 +250,8 @@ class ReviewController extends Controller
                 return $this->notFound('Location not found');
             }
 
-            // Fetch reviews with user, images, like count, and the authenticated user's reaction
-            $reviews = Review::with(['user:id,name,avatar', 'images'])
+            // Fetch reviews with user, images, like count, and reports
+            $reviews = Review::with(['user:id,name,avatar', 'images', 'reports'])
                 ->withCount([
                     'reactions as like_count' => function ($query) {
                         $query->where('type', 'like');
@@ -290,6 +290,21 @@ class ReviewController extends Controller
 
                 // Add user reaction
                 $reviewData['user_reacted'] = optional($review->reactions->first())->type ?? null;
+
+                // Add report status based on all reports
+                $reports = $review->reports;
+                $reportStatus = null;
+                if ($reports->isNotEmpty()) {
+                    if ($reports->contains('status', 'resolved')) {
+                        $reportStatus = 'Reported';
+                    } elseif ($reports->contains('status', 'pending')) {
+                        $reportStatus = 'Pending - Under Review';
+                    }
+                }
+                $reviewData['report_status'] = $reportStatus;
+
+                // Remove reports data (keep only report_status)
+                unset($reviewData['reports']);
 
                 // Remove reactions (optional)
                 unset($reviewData['reactions']);
@@ -360,6 +375,96 @@ class ReviewController extends Controller
             ]);
         }
     }
+
+
+
+
+
+    /*======= FETCH RECENT REVIEWS =========*/
+    public function fetchRecentReviews(Request $request)
+    {
+        try {
+            // Fetch the latest 5 reviews with user, images, location, like count, and reports
+            $reviews = Review::with(['user:id,name,avatar', 'images', 'location', 'reports'])
+                ->withCount([
+                    'reactions as like_count' => function ($query) {
+                        $query->where('type', 'like');
+                    }
+                ])
+                ->orderBy('updated_at', 'desc') // Sort by updated_at descending for latest
+                ->limit(5) // Limit to 5 recent reviews
+                ->get();
+
+            // Transform each review
+            $reviews = $reviews->map(function ($review) {
+                $reviewData = $review->toArray();
+
+                // Format dates
+                $reviewData['created_at'] = \Carbon\Carbon::parse($review->created_at)->format('F j, Y');
+                $reviewData['updated_at'] = \Carbon\Carbon::parse($review->updated_at)->format('F j, Y');
+
+                // Format image URLs
+                $reviewData['images'] = $review->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'review_id' => $image->review_id,
+                        'image' => asset('storage/' . $image->image),
+                        'created_at' => \Carbon\Carbon::parse($image->created_at)->format('F j, Y'),
+                        'updated_at' => \Carbon\Carbon::parse($image->updated_at)->format('F j, Y'),
+                    ];
+                });
+
+                // User avatar URL
+                if (!empty($review->user)) {
+                    $reviewData['user']['avatar'] = $review->user->avatar ? asset('storage/' . $review->user->avatar) : null;
+                }
+
+                // Format location data
+                if (!empty($review->location)) {
+                    $reviewData['location'] = [
+                        'id' => $review->location->id,
+                        'name' => $review->location->name,
+                        'latitude' => $review->location->latitude,
+                        'longitude' => $review->location->longitude,
+                    ];
+                }
+
+                // Add report status based on all reports
+                $reports = $review->reports;
+                $reportStatus = null;
+                if ($reports->isNotEmpty()) {
+                    if ($reports->contains('status', 'resolved')) {
+                        $reportStatus = 'Reported';
+                    } elseif ($reports->contains('status', 'pending')) {
+                        $reportStatus = 'Pending - Under Review';
+                    }
+                }
+                $reviewData['report_status'] = $reportStatus;
+
+                // Remove unnecessary data
+                unset($reviewData['location_id']); // Keep location data in the location object instead
+                unset($reviewData['reports']);
+                unset($reviewData['reactions']);
+                unset($reviewData['user_reacted']);
+
+                return $reviewData;
+            });
+
+            $averageRating = $reviews->avg('rating');
+
+            return $this->success([
+                'average_rating' => round($averageRating, 2),
+                'reviews' => $reviews,
+            ], 'Recent reviews fetched successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Fetch Recent Reviews Error: ' . $e->getMessage());
+            return $this->error('Something went wrong', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+
+
 
 
 
