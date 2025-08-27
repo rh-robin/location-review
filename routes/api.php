@@ -26,6 +26,9 @@ Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword
 Route::post('/verify-otp', [ResetPasswordController::class, 'VerifyOTP']);
 Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
 
+
+Route::get('/fetch-review/latest', [ReviewController::class, 'fetchRecentReviews']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [LogoutController::class, 'logout']);
     //store location data
@@ -33,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update-review/{id}', [ReviewController::class, 'updateReview']);
     Route::delete('/delete-review/{id}', [ReviewController::class, 'deleteReview']);
     Route::get('/fetch-review', [ReviewController::class, 'fetchReview']);
-    Route::get('/fetch-review/latest', [ReviewController::class, 'fetchRecentReviews']);
 
     //replay
     Route::get('/reviews/{reviewId}/replies', [ReplyController::class, 'index']);
