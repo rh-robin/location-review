@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Mail;
+use App\Models\EmailContent;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -38,8 +39,13 @@ class OtpMail extends Mailable
      * Get the message content definition.
      */
     public function content(): Content {
+        $emailContent = EmailContent::first(); // Fetch the single record
         return new Content(
             view: 'mail.otpmail',
+            with: [
+                'company_name' => $emailContent->company_name,
+                'company_location' => $emailContent->company_location,
+            ],
         );
     }
 

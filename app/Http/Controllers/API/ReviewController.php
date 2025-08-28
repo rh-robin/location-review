@@ -296,9 +296,11 @@ class ReviewController extends Controller
                 if (!empty($review->user) && !empty($review->location_id)) {
                     $userLocation = UserLocation::where('user_id', $review->user->id)
                         ->where('location_id', $review->location_id)
+                        ->where('status', 'verified')
                         ->first();
                     if ($userLocation) {
                         $role = $userLocation->role;
+                        $role = ucwords(str_replace('_', ' ', $role));
                     }
                 }
                 $reviewData['role'] = $role;
@@ -446,9 +448,11 @@ class ReviewController extends Controller
                 if (!empty($review->user) && !empty($review->location)) {
                     $userLocation = UserLocation::where('user_id', $review->user->id)
                         ->where('location_id', $review->location->id)
+                        ->where('status', 'verified')
                         ->first();
                     if ($userLocation) {
                         $role = $userLocation->role;
+                        $role = ucwords(str_replace('_', ' ', $role));
                     }
                 }
                 $reviewData['role'] = $role;

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\EmailContent;
 use App\Models\Report;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -45,8 +46,13 @@ class ReviewReportedMail extends Mailable
      */
     public function content(): Content
     {
+        $emailContent = EmailContent::first();
         return new Content(
-            view: 'emails.review_reported'
+            view: 'emails.review_reported',
+            with: [
+                'company_name' => $emailContent->company_name,
+                'company_location' => $emailContent->company_location,
+            ],
         );
     }
 
