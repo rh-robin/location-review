@@ -38,7 +38,7 @@ class ImportPropertySalesJob implements ShouldQueue
                 throw new \Exception("Uploaded file not found at: " . $originalPath);
             }
 
-            // MySQL secure folder (from SHOW VARIABLES LIKE 'secure_file_priv')
+            // MySQL secure folder (from SHOW VARIABLES LIKE 'secure_file_priv' in phpmyadmin)
             $mysqlImportPath = 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/';
 
             if (!file_exists($mysqlImportPath)) {
