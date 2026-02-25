@@ -5,11 +5,9 @@ namespace App\Http\Controllers\API\Auth;
 use Exception;
 use App\Helpers\Helper;
 use App\Traits\ApiResponse;
-use App\Traits\ResponseTrait;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 
 class LogoutController extends Controller
 {

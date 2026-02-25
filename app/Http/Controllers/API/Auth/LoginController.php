@@ -38,7 +38,7 @@ class LoginController extends Controller
 
             // Check if the email is verified before login is successful
             if (!$user->email_verified_at) {
-                return $this->unauthorized('Email is not verified. Please verify your email first.');
+                return $this->error('Email is not verified. Please verify your email first.', 401, ["is_verified" => false]);
             }
 
             // Generate token if email is verified

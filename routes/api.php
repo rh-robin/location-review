@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\ContactController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\SalePriceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ReplyController;
@@ -71,3 +72,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/my-reports', [ProfileController::class, 'getMyReports']);
 
 });
+
+Route::post('/sale-estimate', [SalePriceController::class, 'estimate']);
