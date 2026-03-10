@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\ContactController;
+use App\Http\Controllers\API\MortgageController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\RemortgageController;
 use App\Http\Controllers\API\RentalEstimateController;
 use App\Http\Controllers\API\SalePriceController;
 use Illuminate\Http\Request;
@@ -76,3 +78,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/sale-estimate', [SalePriceController::class, 'estimate']);
 Route::post('/rental-estimate', [RentalEstimateController::class, 'estimate']);
+Route::post('/mortgage-estimate', [MortgageController::class, 'estimate']);
+Route::post('/remortgage-estimate', [RemortgageController::class, 'estimate']);
