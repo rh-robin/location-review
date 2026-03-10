@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\ContactController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\RentalEstimateController;
 use App\Http\Controllers\API\SalePriceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -74,3 +75,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/sale-estimate', [SalePriceController::class, 'estimate']);
+Route::post('/rental-estimate', [RentalEstimateController::class, 'estimate']);

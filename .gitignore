@@ -21,3 +21,11 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# User uploads / runtime files
+/public/uploads/
+/public/uploads/**
+/storage/app/public/
+
+# Zip archives in project root
+/*.zip
