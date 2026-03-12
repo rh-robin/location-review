@@ -14,8 +14,8 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: 13.61.33.146
+          server: 16.170.76.21
           username: backend-deploy
-          password: "89RV5TVYsXNvHe4YiTs0"
+          password: "dk3gXSAmM7RXoGqHnTv7"
 
 
