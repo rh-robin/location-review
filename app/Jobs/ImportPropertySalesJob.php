@@ -39,7 +39,8 @@ class ImportPropertySalesJob implements ShouldQueue
             }
 
             // MySQL secure folder (from SHOW VARIABLES LIKE 'secure_file_priv' in phpmyadmin)
-            $mysqlImportPath = 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/';
+            //$mysqlImportPath = 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/';
+            $mysqlImportPath = '/var/lib/mysql-files/';
 
             if (!file_exists($mysqlImportPath)) {
                 throw new \Exception("MySQL upload directory not found.");
@@ -96,7 +97,9 @@ class ImportPropertySalesJob implements ShouldQueue
             $afterCount = DB::table('property_sales')->count();
             $inserted = $afterCount - $beforeCount;
 
-            unlink($newPath);
+            if (file_exists($newPath)) {
+                unlink($newPath);
+            }
 
             $this->import->update([
                 'status' => 'completed',
