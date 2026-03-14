@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 
 class ImportRentalStatistics extends Command
 {
@@ -17,6 +18,9 @@ class ImportRentalStatistics extends Command
 
     public function handle()
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         $filePath = $this->argument('file');
 
         if (!file_exists($filePath)) {
@@ -24,112 +28,115 @@ class ImportRentalStatistics extends Command
             return;
         }
 
-        $this->info('Loading XLS file (optimized mode)...');
-
-        $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load($filePath);
-
-        $sheet = $spreadsheet->getSheetByName('Table 1');
-
-        if (!$sheet) {
-            $this->error('Sheet "Table 1" not found.');
-            return;
-        }
+        $this->info('Loading XLS file (chunk mode)...');
 
         DB::disableQueryLog();
 
-        $highestRow = $sheet->getHighestRow();
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
 
-        $batch = [];
-        $batchSize = 500;
+        $chunkSize = 500;
+        $startRow = 4;
+
+        $filter = new ChunkReadFilter();
+        $reader->setReadFilter($filter);
+
         $insertedCount = 0;
-        $debugCounter = 0;
 
-        for ($row = 4; $row <= $highestRow; $row++) {
+        while (true) {
 
-            $timePeriod = trim((string) $sheet->getCell("A$row")->getValue());
-            $areaCode   = trim((string) $sheet->getCell("B$row")->getValue());
-            $areaName   = trim((string) $sheet->getCell("C$row")->getValue());
-            $region     = trim((string) $sheet->getCell("D$row")->getValue());
+            $filter->setRows($startRow, $chunkSize);
 
-            if (!$timePeriod || !$areaName) {
-                continue;
+            $spreadsheet = $reader->load($filePath);
+            $sheet = $spreadsheet->getSheetByName('Table 1');
+
+            if (!$sheet) {
+                $this->error('Sheet "Table 1" not found.');
+                return;
             }
 
-            // Debug first few rows
-            if ($debugCounter < 5) {
-                Log::info("Row $row", [
-                    'timePeriod' => $timePeriod,
-                    'areaCode' => $areaCode,
-                    'areaName' => $areaName,
-                ]);
-                $debugCounter++;
-            }
+            $rowsProcessed = 0;
+            $batch = [];
 
-            // Parse date safely
-            try {
+            foreach ($sheet->getRowIterator($startRow, $startRow + $chunkSize - 1) as $row) {
 
-                if (is_numeric($timePeriod)) {
-                    // Excel serial date
-                    $date = Carbon::instance(
-                        ExcelDate::excelToDateTimeObject($timePeriod)
-                    );
-                } else {
-                    // Text date like Jan-2015
-                    $date = Carbon::parse($timePeriod);
+                $rowIndex = $row->getRowIndex();
+
+                $timePeriod = trim((string)$sheet->getCell("A$rowIndex")->getValue());
+                $areaCode   = trim((string)$sheet->getCell("B$rowIndex")->getValue());
+                $areaName   = trim((string)$sheet->getCell("C$rowIndex")->getValue());
+                $region     = trim((string)$sheet->getCell("D$rowIndex")->getValue());
+
+                if (!$timePeriod || !$areaName) {
+                    continue;
                 }
 
-            } catch (\Exception $e) {
-                Log::warning("Date parse failed on row $row: " . $timePeriod);
-                continue;
+                try {
+
+                    if (is_numeric($timePeriod)) {
+                        $date = Carbon::instance(
+                            ExcelDate::excelToDateTimeObject($timePeriod)
+                        );
+                    } else {
+                        $date = Carbon::parse($timePeriod);
+                    }
+
+                } catch (\Exception $e) {
+                    Log::warning("Date parse failed on row $rowIndex: " . $timePeriod);
+                    continue;
+                }
+
+                if ($date->year < 2024) {
+                    continue;
+                }
+
+                $rent1 = $this->cleanNumber($sheet->getCell("L$rowIndex")->getValue());
+                $rent2 = $this->cleanNumber($sheet->getCell("P$rowIndex")->getValue());
+                $rent3 = $this->cleanNumber($sheet->getCell("T$rowIndex")->getValue());
+                $rent4 = $this->cleanNumber($sheet->getCell("X$rowIndex")->getValue());
+
+                $rentDetached     = $this->cleanNumber($sheet->getCell("AB$rowIndex")->getValue());
+                $rentSemiDetached = $this->cleanNumber($sheet->getCell("AF$rowIndex")->getValue());
+                $rentTerraced     = $this->cleanNumber($sheet->getCell("AJ$rowIndex")->getValue());
+                $rentFlat         = $this->cleanNumber($sheet->getCell("AN$rowIndex")->getValue());
+
+                $batch[] = [
+                    'area_code' => $areaCode,
+                    'area_name' => $areaName,
+                    'region' => $region,
+                    'period_date' => $date->format('Y-m-01'),
+                    'year' => $date->year,
+                    'month' => $date->month,
+                    'rent_1_bed' => $rent1,
+                    'rent_2_bed' => $rent2,
+                    'rent_3_bed' => $rent3,
+                    'rent_4plus_bed' => $rent4,
+                    'rent_detached' => $rentDetached,
+                    'rent_semidetached' => $rentSemiDetached,
+                    'rent_terraced' => $rentTerraced,
+                    'rent_flat' => $rentFlat,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                $rowsProcessed++;
             }
 
-            // Import only 2024+
-            if ($date->year < 2024) {
-                continue;
-            }
-
-            // Clean numeric values
-            $rent1 = $this->cleanNumber($sheet->getCell("L$row")->getValue());
-            $rent2 = $this->cleanNumber($sheet->getCell("P$row")->getValue());
-            $rent3 = $this->cleanNumber($sheet->getCell("T$row")->getValue());
-            $rent4 = $this->cleanNumber($sheet->getCell("X$row")->getValue());
-
-            $rentDetached     = $this->cleanNumber($sheet->getCell("AB$row")->getValue());
-            $rentSemiDetached = $this->cleanNumber($sheet->getCell("AF$row")->getValue());
-            $rentTerraced     = $this->cleanNumber($sheet->getCell("AJ$row")->getValue());
-            $rentFlat         = $this->cleanNumber($sheet->getCell("AN$row")->getValue());
-
-            $batch[] = [
-                'area_code' => $areaCode,
-                'area_name' => $areaName,
-                'region' => $region,
-                'period_date' => $date->format('Y-m-01'),
-                'year' => $date->year,
-                'month' => $date->month,
-                'rent_1_bed' => $rent1,
-                'rent_2_bed' => $rent2,
-                'rent_3_bed' => $rent3,
-                'rent_4plus_bed' => $rent4,
-                'rent_detached' => $rentDetached,
-                'rent_semidetached' => $rentSemiDetached,
-                'rent_terraced' => $rentTerraced,
-                'rent_flat' => $rentFlat,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-
-            if (count($batch) >= $batchSize) {
+            if (!empty($batch)) {
                 RentalStatistic::insert($batch);
                 $insertedCount += count($batch);
-                $batch = [];
             }
-        }
 
-        if (!empty($batch)) {
-            RentalStatistic::insert($batch);
-            $insertedCount += count($batch);
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            if ($rowsProcessed == 0) {
+                break;
+            }
+
+            $startRow += $chunkSize;
+
+            $this->info("Processed up to row $startRow");
         }
 
         $this->info("Import completed successfully. Rows inserted: $insertedCount");
@@ -151,17 +158,14 @@ class ImportRentalStatistics extends Command
             return null;
         }
 
-        // Remove commas
         $value = str_replace(',', '', $value);
 
-        // If not numeric, skip
         if (!is_numeric($value)) {
             return null;
         }
 
         $number = (int) round($value);
 
-        // Safety check: prevent extreme values
         if ($number < 0 || $number > 100000) {
             return null;
         }
