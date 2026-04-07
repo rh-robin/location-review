@@ -53,6 +53,7 @@ class LeadResource extends Resource
                             ->label('User Role')
                             ->badge()
                             ->color('warning')
+                            ->formatStateUsing(fn (string $state): string => ucfirst($state))
                             ->visible(fn (Lead $record) => $record->source === 'rent'),
                     ]),
 
@@ -138,6 +139,7 @@ class LeadResource extends Resource
                     ->badge()
                     ->color('warning')
                     ->toggleable()
+                    ->formatStateUsing(fn (?string $state): ?string => $state ? ucfirst($state) : null)
                     ->placeholder('-'),
                 TextColumn::make('name')
                     ->searchable()
