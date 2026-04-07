@@ -16,6 +16,7 @@ use App\Http\Controllers\API\ReactionCoontroller;
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
+use App\Http\Controllers\API\LeadController;
 
 //register
 Route::post('register', [RegisterController::class, 'register']);
@@ -80,3 +81,6 @@ Route::post('/sale-estimate', [SalePriceController::class, 'estimate']);
 Route::post('/rental-estimate', [RentalEstimateController::class, 'estimate']);
 Route::post('/mortgage-estimate', [MortgageController::class, 'estimate']);
 Route::post('/remortgage-estimate', [RemortgageController::class, 'estimate']);
+
+Route::post('/leads/save-plan', [LeadController::class, 'savePlan']);
+Route::post('/leads/request-consultation', [LeadController::class, 'saveExpertConsultation']);
