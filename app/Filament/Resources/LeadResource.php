@@ -49,6 +49,11 @@ class LeadResource extends Resource
                         TextEntry::make('created_at')
                             ->dateTime()
                             ->label('Received At'),
+                        TextEntry::make('user_role')
+                            ->label('User Role')
+                            ->badge()
+                            ->color('warning')
+                            ->visible(fn (Lead $record) => $record->source === 'rent'),
                     ]),
 
                 Section::make('Contact Details')
@@ -128,6 +133,12 @@ class LeadResource extends Resource
                 TextColumn::make('source')
                     ->badge()
                     ->sortable(),
+                TextColumn::make('user_role')
+                    ->label('Role')
+                    ->badge()
+                    ->color('warning')
+                    ->toggleable()
+                    ->placeholder('-'),
                 TextColumn::make('name')
                     ->searchable()
                     ->placeholder('N/A'),

@@ -22,6 +22,7 @@ class LeadController extends Controller
             'planning_time'      => 'required|in:asap,1-3 months,3-6 months',
             'note'               => 'nullable|string',
             'source'             => 'required|in:sales,rent,mortgage,remortgage',
+            'user_role'          => 'required_if:source,rent|nullable|in:Owner,Tenant',
             'calculation_input'  => 'required|array',
             'calculation_output' => 'required|array',
         ]);
@@ -33,6 +34,7 @@ class LeadController extends Controller
         $lead = Lead::create([
             'type'               => 'plan',
             'source'             => $request->source,
+            'user_role'          => $request->user_role,
             'email'              => $request->email,
             'planning_time'      => $request->planning_time,
             'note'               => $request->note,
@@ -58,6 +60,7 @@ class LeadController extends Controller
             'preferred_date'          => 'required|date',
             'preferred_time'          => 'required|string',
             'source'                  => 'required|in:sales,rent,mortgage,remortgage',
+            'user_role'               => 'required_if:source,rent|nullable|in:Owner,Tenant',
             'calculation_input'       => 'required|array',
             'calculation_output'      => 'required|array',
         ]);
@@ -69,6 +72,7 @@ class LeadController extends Controller
         $lead = Lead::create([
             'type'                     => 'consultation',
             'source'                   => $request->source,
+            'user_role'                => $request->user_role,
             'number_of_experts'        => $request->number_of_experts,
             'name'                     => $request->name,
             'preferred_contact_method'  => $request->preferred_contact_method,

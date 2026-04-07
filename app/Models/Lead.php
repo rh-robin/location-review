@@ -9,6 +9,7 @@ class Lead extends Model
     protected $fillable = [
         'type',
         'source',
+        'user_role',
         'email',
         'planning_time',
         'note',
