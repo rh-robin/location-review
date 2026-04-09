@@ -75,16 +75,39 @@ class SalePriceEstimatorService
                 ];
             }
 
-            sort($prices);
+            // Remove outliers
+            $filteredPrices = $this->removeOutliers($prices);
 
-            $median = $this->median($prices);
+            sort($filteredPrices);
+
+            $median = $this->median($filteredPrices);
+
+            // 🔥 NEW: tighter range around median (-10% to +15%)
+            $lowerBound = $median * 0.90;
+            $upperBound = $median * 1.15;
+
+            // Filter again based on median band
+            $finalPrices = array_values(array_filter($filteredPrices, function ($price) use ($lowerBound, $upperBound) {
+                return $price >= $lowerBound && $price <= $upperBound;
+            }));
+
+            // Safety fallback
+            if (count($finalPrices) < 5) {
+                // Relax the band instead of discarding it
+                $lowerBound = $median * 0.80;
+                $upperBound = $median * 1.25;
+
+                $finalPrices = array_values(array_filter($filteredPrices, function ($price) use ($lowerBound, $upperBound) {
+                    return $price >= $lowerBound && $price <= $upperBound;
+                }));
+            }
 
             return [
                 'estimated_price' => $median,
-                'min_price'       => min($prices),
-                'max_price'       => max($prices),
-                'comparables'     => count($prices),
-                'confidence'      => $this->confidence(count($prices)),
+                'min_price'       => min($finalPrices),
+                'max_price'       => max($finalPrices),
+                'comparables'     => count($finalPrices),
+                'confidence'      => $this->confidence(count($finalPrices)),
                 'level_used'      => $level,
             ];
         });
@@ -118,5 +141,37 @@ class SalePriceEstimatorService
         if ($count >= 15) return 80;
         if ($count >= 8)  return 65;
         return 40;
+    }
+
+
+    protected function removeOutliers(array $prices): array
+    {
+        sort($prices);
+
+        $count = count($prices);
+
+        // If too few data points, don't filter
+        if ($count < 10) {
+            return $prices;
+        }
+
+        $q1 = $prices[(int) floor($count * 0.25)];
+        $q3 = $prices[(int) floor($count * 0.75)];
+
+        $iqr = $q3 - $q1;
+
+        $lower = $q1 - (1.5 * $iqr);
+        $upper = $q3 + (1.5 * $iqr);
+
+        $filtered = array_values(array_filter($prices, function ($price) use ($lower, $upper) {
+            return $price >= $lower && $price <= $upper;
+        }));
+
+        // Safety fallback (important)
+        if (count($filtered) < 5) {
+            return $prices;
+        }
+
+        return $filtered;
     }
 }

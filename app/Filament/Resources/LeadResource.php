@@ -15,6 +15,8 @@ use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Select;
+use Filament\Infolists\Components\Actions\Action;
 
 class LeadResource extends Resource
 {
@@ -55,6 +57,17 @@ class LeadResource extends Resource
                             ->color('warning')
                             ->formatStateUsing(fn (string $state): string => ucfirst($state))
                             ->visible(fn (Lead $record) => $record->source === 'rent'),
+                        TextEntry::make('status')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'new' => 'gray',
+                                'contacted' => 'info',
+                                'sent_out' => 'warning',
+                                'completed' => 'success',
+                                'not interested', 'invalid' => 'danger',
+                                default => 'gray',
+                            })
+                            ->formatStateUsing(fn (string $state): string => str($state)->headline()),
                     ]),
 
                 Section::make('Contact Details')
@@ -153,6 +166,18 @@ class LeadResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'new' => 'gray',
+                        'contacted' => 'info',
+                        'sent_out' => 'warning',
+                        'completed' => 'success',
+                        'not interested', 'invalid' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => str($state)->headline())
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -168,8 +193,39 @@ class LeadResource extends Resource
                         'mortgage' => 'Mortgage',
                         'remortgage' => 'Remortgage',
                     ]),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'new' => 'New',
+                        'contacted' => 'Contacted',
+                        'sent_out' => 'Sent Out',
+                        'completed' => 'Completed',
+                        'not interested' => 'Not Interested',
+                        'invalid' => 'Invalid',
+                    ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('updateStatus')
+                    ->label('Update Status')
+                    ->icon('heroicon-m-chevron-right')
+                    ->color('info')
+                    ->form([
+                        Select::make('status')
+                            ->label('Lead Status')
+                            ->options([
+                                'new' => 'New',
+                                'contacted' => 'Contacted',
+                                'sent_out' => 'Sent Out',
+                                'completed' => 'Completed',
+                                'not interested' => 'Not Interested',
+                                'invalid' => 'Invalid',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function (Lead $record, array $data): void {
+                        $record->update([
+                            'status' => $data['status'],
+                        ]);
+                    }),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
