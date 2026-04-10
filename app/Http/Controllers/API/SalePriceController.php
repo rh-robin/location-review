@@ -26,15 +26,22 @@ class SalePriceController extends Controller
             return $this->validationError($validator->errors()->toArray());
         }
 
-        $postcode = strtoupper(trim($request->postcode));
+        // Normalize postcode (remove spaces, uppercase)
+        $rawPostcode = strtoupper(str_replace(' ', '', trim($request->postcode)));
 
-        // Extract sector
-        $parts = explode(' ', $postcode);
-        if (count($parts) < 2) {
+        // Basic length check (UK postcodes usually 5–7 chars)
+        if (strlen($rawPostcode) < 5) {
             return $this->validationError(['postcode' => ['Invalid postcode format']]);
         }
 
-        $postcodeSector = $parts[0] . ' ' . substr($parts[1], 0, 1);
+        // Rebuild standard format (insert space before last 3 chars)
+        $outward = substr($rawPostcode, 0, -3);
+        $inward  = substr($rawPostcode, -3);
+
+        $postcode = $outward . ' ' . $inward;
+
+        // Extract sector (e.g. SW1A 1AA → SW1A 1)
+        $postcodeSector = $outward . ' ' . substr($inward, 0, 1);
 
         // Fetch district & county once
         $location = DB::table('property_sales')
