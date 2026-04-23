@@ -7,6 +7,7 @@ use App\Services\MortgageEstimatorService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\EstimationRequest;
 
 class RemortgageController extends Controller
 {
@@ -20,6 +21,8 @@ class RemortgageController extends Controller
             'current_interest_rate' => 'required|numeric|min:0.1|max:20',
             'new_interest_rate' => 'required|numeric|min:0.1|max:20',
             'remaining_term_years' => 'required|integer|min:5|max:40',
+            'postcode' => 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -44,6 +47,14 @@ class RemortgageController extends Controller
             'current_interest_rate' => (float) $request->current_interest_rate,
             'new_interest_rate' => (float) $request->new_interest_rate,
             'remaining_term_years' => (int) $request->remaining_term_years
+        ]);
+
+        EstimationRequest::create([
+            'estimation_type' => 'remortgage',
+            'postcode'        => $request->postcode,
+            'address'         => $request->address,
+            'input'           => $request->all(),
+            'output'          => $result,
         ]);
 
         return $this->success(

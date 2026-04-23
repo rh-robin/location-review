@@ -8,6 +8,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\EstimationRequest;
 
 class RentalEstimateController extends Controller
 {
@@ -18,6 +19,7 @@ class RentalEstimateController extends Controller
         $validator = Validator::make($request->all(), [
             'postcode' => 'required|string',
             'bedrooms' => 'required|integer|min:1|max:10',
+            'address'  => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -63,6 +65,14 @@ class RentalEstimateController extends Controller
         if (!$result['estimated_rent']) {
             return $this->notFound('Rental data not available for this area.');
         }
+
+        EstimationRequest::create([
+            'estimation_type' => 'rent',
+            'postcode'        => $postcode,
+            'address'         => $request->address,
+            'input'           => $request->all(),
+            'output'          => $result,
+        ]);
 
         return $this->success($result, 'Estimated monthly rent calculated successfully.');
     }

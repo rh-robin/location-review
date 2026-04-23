@@ -82,9 +82,9 @@ class SalePriceEstimatorService
 
             $median = $this->median($filteredPrices);
 
-            // 🔥 NEW: tighter range around median (-10% to +15%)
-            $lowerBound = $median * 0.90;
-            $upperBound = $median * 1.15;
+            // NEW: tighter range around median (-5% to +20%)
+            $lowerBound = $median * 0.95;
+            $upperBound = $median * 1.20;
 
             // Filter again based on median band
             $finalPrices = array_values(array_filter($filteredPrices, function ($price) use ($lowerBound, $upperBound) {

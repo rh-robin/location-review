@@ -7,6 +7,7 @@ use App\Services\MortgageEstimatorService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\EstimationRequest;
 
 class MortgageController extends Controller
 {
@@ -20,6 +21,8 @@ class MortgageController extends Controller
             'annual_income' => 'required|numeric|min:1000',
             'term_years' => 'required|integer|min:5|max:40',
             'interest_rate' => 'nullable|numeric|min:0.1|max:20',
+            'postcode' => 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -42,6 +45,14 @@ class MortgageController extends Controller
             'annual_income' => (float) $request->annual_income,
             'term_years' => (int) $request->term_years,
             'interest_rate' => $request->interest_rate
+        ]);
+
+        EstimationRequest::create([
+            'estimation_type' => 'mortgage',
+            'postcode'        => $request->postcode,
+            'address'         => $request->address,
+            'input'           => $request->all(),
+            'output'          => $result,
         ]);
 
         return $this->success(

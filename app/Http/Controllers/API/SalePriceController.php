@@ -8,6 +8,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\EstimationRequest;
 
 class SalePriceController extends Controller
 {
@@ -20,6 +21,7 @@ class SalePriceController extends Controller
             'property_type'  => 'required|in:D,S,T,F',
             'duration'       => 'required|in:F,L',
             'months'         => 'nullable|integer|min:3|max:24',
+            'address'        => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -65,6 +67,14 @@ class SalePriceController extends Controller
         if (!$result['estimated_price']) {
             return $this->notFound('No comparable sales found.');
         }
+
+        EstimationRequest::create([
+            'estimation_type' => 'sale',
+            'postcode'        => $postcode,
+            'address'         => $request->address,
+            'input'           => $request->all(),
+            'output'          => $result,
+        ]);
 
         return $this->success($result, 'Estimated sale price calculated successfully.');
     }
