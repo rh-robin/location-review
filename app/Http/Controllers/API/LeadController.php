@@ -22,7 +22,7 @@ class LeadController extends Controller
             'planning_time'      => 'required|in:asap,1-3 months,3-6 months',
             'note'               => 'nullable|string',
             'source'             => 'required|in:sales,rent,mortgage,remortgage',
-            'user_role'          => 'required_if:source,rent|nullable|in:owner,tenant',
+            'user_role'          => 'required_if:source,rent|nullable',
             'calculation_input'  => 'required|array',
             'calculation_output' => 'required|array',
         ]);
