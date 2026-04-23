@@ -60,7 +60,7 @@ class LeadController extends Controller
             'preferred_date'          => 'required|date',
             'preferred_time'          => 'required|string',
             'source'                  => 'required|in:sales,rent,mortgage,remortgage',
-            'user_role'               => 'required_if:source,rent|nullable|in:owner,tenant',
+            'user_role'               => 'required_if:source,rent|nullable',
             'calculation_input'       => 'required|array',
             'calculation_output'      => 'required|array',
         ]);
